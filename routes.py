@@ -19,11 +19,29 @@ SCREEN_RESOLUTION = "1024x768"
 def get_repl_url():
     """Get the external Replit URL for VNC access"""
     import os
-    repl_slug = os.getenv('REPL_SLUG', 'vnc-desktop')
-    repl_owner = os.getenv('REPL_OWNER', 'user')
     
-    # Replit format: https://repl-slug--repl-owner.replit.app:PORT
-    return f"https://{repl_slug}--{repl_owner}.replit.app"
+    # Try to get the actual Replit URL from environment
+    repl_url = os.getenv('REPLIT_URL')
+    if repl_url:
+        return repl_url.replace('http://', 'https://').rstrip('/')
+    
+    # Fallback: construct URL from Replit environment variables
+    repl_slug = os.getenv('REPL_SLUG')
+    repl_owner = os.getenv('REPL_OWNER') or os.getenv('USER', 'user')
+    
+    if repl_slug and repl_owner:
+        return f"https://{repl_slug}--{repl_owner}.replit.app"
+    
+    # Last fallback: use current domain from request if available
+    try:
+        from flask import request
+        if request:
+            return f"https://{request.host}".replace(':80', '').replace(':443', '')
+    except:
+        pass
+    
+    # Final fallback for development
+    return "https://your-repl.replit.app"
 
 def check_vnc_status():
     """Check VNC server status"""
@@ -44,8 +62,14 @@ def log_action(action, success=True, message="", client_ip="127.0.0.1"):
         log.client_ip = client_ip
         db.session.add(log)
         db.session.commit()
-    except:
-        pass  # Don't break if logging fails
+        app.logger.info(f"Logged action: {action} - {message}")
+    except Exception as e:
+        app.logger.error(f"Failed to log action {action}: {e}")
+        # Don't break the main flow if logging fails
+        try:
+            db.session.rollback()
+        except:
+            pass
 
 def start_vnc_server():
     """Start VNC server using the VNC Desktop Server workflow"""
@@ -95,7 +119,12 @@ def update_session_status():
         session.last_accessed = datetime.utcnow()
         db.session.commit()
         return session
-    except:
+    except Exception as e:
+        app.logger.error(f"Failed to update session status: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
         return None
 
 @app.route('/')
