@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "bash", "web", "python-3.11"]
+modules = ["bash", "python-3.11"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["docker", "firefox", "openbox", "x11vnc", "xorg.xvfb"]
+packages = ["docker", "firefox", "openbox", "openssl", "postgresql", "x11vnc", "xorg.xvfb", "lxterminal", "xterm"]
 
 [workflows]
 runButton = "Project"
@@ -21,6 +21,10 @@ args = "VNC Desktop Server"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "VNC Web Interface"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
 
 [[workflows.workflow]]
 name = "VNC Desktop Server"
@@ -42,8 +46,14 @@ task = "shell.exec"
 args = "python3 web_interface.py"
 waitForPort = 5000
 
-[workflows.workflow.metadata]
-outputType = "webview"
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
@@ -52,3 +62,7 @@ externalPort = 80
 [[ports]]
 localPort = 6080
 externalPort = 3000
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
