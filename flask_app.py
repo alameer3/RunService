@@ -38,7 +38,8 @@ def create_app():
     # تسجيل النماذج وإنشاء الجداول
     with app.app_context():
         try:
-            from models import VNCSession, ConnectionLog, SystemLog, ApplicationInfo
+            # استيراد النماذج بحيث تُسجل مع SQLAlchemy
+            import models
             db.create_all()
             logger.info("✅ تم تهيئة قاعدة البيانات بنجاح")
         except Exception as e:

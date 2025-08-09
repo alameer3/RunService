@@ -7,10 +7,11 @@ import socket
 import time
 import threading
 import psutil
+import subprocess
 from pathlib import Path
 import logging
 from datetime import datetime
-from models import VNCSession, ConnectionLog, SystemLog, SystemConfig, db
+from flask import current_app
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class VNCManager:
         self.vnc_dir = Path.home() / ".vnc"
         self.vnc_dir.mkdir(exist_ok=True)
         
-        # تهيئة كلمة المرور
+        # تهيئة كلمة المرور (بدون قاعدة بيانات في البداية)
         self._setup_vnc_password()
     
     def _setup_vnc_password(self):
@@ -45,11 +46,25 @@ class VNCManager:
                 os.chmod(passwd_file, 0o600)
                 
                 logger.info("✅ تم إعداد كلمة مرور VNC")
-                SystemLog.log('INFO', 'VNC', 'تم إعداد كلمة مرور VNC بنجاح')
+                # تسجيل النجاح بدون استخدام قاعدة البيانات مباشرة
+                if current_app:
+                    try:
+                        from models import SystemLog, db
+                        with current_app.app_context():
+                            SystemLog.log('INFO', 'VNC', 'تم إعداد كلمة مرور VNC بنجاح')
+                    except:
+                        pass
                 
         except Exception as e:
             logger.error(f"خطأ في إعداد كلمة المرور: {e}")
-            SystemLog.log('ERROR', 'VNC', f'فشل في إعداد كلمة المرور: {e}')
+            # تسجيل الخطأ بدون استخدام قاعدة البيانات مباشرة
+            if current_app:
+                try:
+                    from models import SystemLog, db
+                    with current_app.app_context():
+                        SystemLog.log('ERROR', 'VNC', f'فشل في إعداد كلمة المرور: {e}')
+                except:
+                    pass
     
     def start_vnc_server(self, display=None, resolution=None):
         """بدء خادم VNC المحاكي"""
@@ -312,21 +327,75 @@ class VNCManager:
             logger.error(f"خطأ في إنشاء سجل الجلسة: {e}")
             return None
 
-# إنشاء instance عام
-vnc_manager = VNCManager()
+# المتغير العام - سيتم تهيئته عند الحاجة
+vnc_manager = None
+
+def get_vnc_manager():
+    """الحصول على instance مدير VNC"""
+    global vnc_manager
+    if vnc_manager is None:
+        vnc_manager = VNCManager()
+    return vnc_manager
 
 # وظائف مساعدة للاستخدام في التطبيق
 def start_vnc_server(**kwargs):
     """بدء خادم VNC"""
-    return vnc_manager.start_vnc_server(**kwargs)
+    return get_vnc_manager().start_vnc_server(**kwargs)
 
 def stop_vnc_server():
     """إيقاف خادم VNC"""
-    return vnc_manager.stop_vnc_server()
+    return get_vnc_manager().stop_vnc_server()
 
 def get_vnc_status():
     """الحصول على حالة VNC"""
-    return vnc_manager.get_vnc_status()
+    return get_vnc_manager().get_vnc_status()
+
+def get_system_info():
+    """الحصول على معلومات النظام"""
+    try:
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        return {
+            'cpu_percent': cpu_percent,
+            'memory_total': memory.total,
+            'memory_used': memory.used,
+            'memory_percent': memory.percent,
+            'disk_total': disk.total,
+            'disk_used': disk.used,
+            'disk_percent': (disk.used / disk.total) * 100
+        }
+    except Exception as e:
+        logger.error(f"خطأ في الحصول على معلومات النظام: {e}")
+        return {
+            'cpu_percent': 0,
+            'memory_total': 0,
+            'memory_used': 0,
+            'memory_percent': 0,
+            'disk_total': 0,
+            'disk_used': 0,
+            'disk_percent': 0
+        }
+
+def get_detailed_status():
+    """الحصول على حالة مفصلة للنظام"""
+    return {
+        'vnc': get_vnc_status(),
+        'system': get_system_info(),
+        'timestamp': datetime.now().isoformat()
+    }
+
+def get_vnc_config():
+    """الحصول على إعدادات VNC"""
+    manager = get_vnc_manager()
+    return {
+        'base_display': manager.base_display,
+        'base_port': manager.base_port,
+        'screen_resolution': manager.screen_resolution,
+        'color_depth': manager.color_depth,
+        'vnc_password': '***' if manager.vnc_password else None
+    }
 
 def get_vnc_config():
     """الحصول على إعدادات VNC"""
