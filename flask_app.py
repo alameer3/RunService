@@ -174,14 +174,24 @@ def register_api_routes(app):
     def api_start_real_vnc():
         """بدء خادم VNC الحقيقي للأندرويد"""
         try:
-            from real_vnc_server import start_real_vnc
-            result = start_real_vnc()
+            from simple_vnc_server import start_vnc_server
+            success = start_vnc_server()
             
-            if result['success']:
+            if success:
+                result = {
+                    'success': True,
+                    'message': 'تم بدء خادم VNC بنجاح على المنفذ 8000',
+                    'connection_info': {
+                        'server': 'workspace.viwat26495.replit.dev',
+                        'port': 8000,
+                        'password': 'vnc123',
+                        'android_connection': 'workspace.viwat26495.replit.dev:8000'
+                    }
+                }
                 socketio.emit('real_vnc_status_changed', {'status': 'running'})
                 return jsonify(result)
             else:
-                return jsonify(result), 500
+                return jsonify({'success': False, 'message': 'فشل في بدء خادم VNC'}), 500
                 
         except Exception as e:
             logger.error(f"خطأ في بدء Real VNC: {e}")
@@ -191,14 +201,15 @@ def register_api_routes(app):
     def api_stop_real_vnc():
         """إيقاف خادم VNC الحقيقي"""
         try:
-            from real_vnc_server import stop_real_vnc
-            result = stop_real_vnc()
+            from simple_vnc_server import stop_vnc_server
+            success = stop_vnc_server()
             
-            if result['success']:
+            if success:
+                result = {'success': True, 'message': 'تم إيقاف خادم VNC'}
                 socketio.emit('real_vnc_status_changed', {'status': 'stopped'})
                 return jsonify(result)
             else:
-                return jsonify(result), 500
+                return jsonify({'success': False, 'message': 'فشل في إيقاف خادم VNC'}), 500
                 
         except Exception as e:
             logger.error(f"خطأ في إيقاف Real VNC: {e}")
@@ -207,8 +218,19 @@ def register_api_routes(app):
     @app.route('/api/real-vnc/status')
     def api_real_vnc_status():
         """حالة خادم VNC الحقيقي"""
-        from real_vnc_server import get_real_vnc_status
-        return jsonify(get_real_vnc_status())
+        try:
+            from simple_vnc_server import get_vnc_status
+            status = get_vnc_status()
+            
+            result = {
+                'is_running': status['is_running'],
+                'connection_info': {
+                    'android_connection': f"workspace.viwat26495.replit.dev:{status['port']}"
+                } if status['is_running'] else None
+            }
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({'is_running': False, 'connection_info': None})
     
     @app.route('/api/apps/install', methods=['POST'])
     def api_install_app():

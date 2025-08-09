@@ -17,7 +17,7 @@ class RealVNCServer:
     
     def __init__(self):
         self.display = ":1"
-        self.port = 5901  # منفذ VNC القياسي
+        self.port = 8000  # منفذ مدعوم في Replit
         self.password = "vnc123"
         self.screen_size = "1024x768"
         self.color_depth = 24

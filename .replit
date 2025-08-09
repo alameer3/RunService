@@ -57,10 +57,15 @@ waitForPort = 5000
 
 [[ports]]
 localPort = 5000
+externalPort = 8080
 
 [[ports]]
 localPort = 6080
 externalPort = 3000
+
+[[ports]]
+localPort = 8000
+externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
