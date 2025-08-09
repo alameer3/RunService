@@ -63,9 +63,6 @@ task = "shell.exec"
 args = "./ultimate_start.sh"
 waitForPort = 5000
 
-[workflows.workflow.metadata]
-outputType = "webview"
-
 [[workflows.workflow]]
 name = "Complete OneClick System"
 author = "agent"
@@ -83,9 +80,6 @@ author = "agent"
 task = "shell.exec"
 args = "python3 main.py"
 waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 5000

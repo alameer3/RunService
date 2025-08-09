@@ -1,76 +1,56 @@
-# نظرة عامة
+# Project Overview
 
-هذا هو مشروع لبيئة سطح مكتب Ubuntu قائمة على الويب تشغل سطح مكتب LXDE كامل يمكن الوصول إليه عبر متصفح الويب باستخدام تقنيات VNC و noVNC. يتيح المشروع للمستخدمين الوصول إلى سطح مكتب Ubuntu كامل عن بُعد دون الحاجة لتثبيت تطبيقات محلية، مع متصفح Chromium مثبت مسبقاً وإمكانية الوصول العام عبر أنفاق Cloudflare.
+## Overview
 
-# تفضيلات المستخدم
+This is a VNC-based remote desktop environment project that provides a complete Ubuntu 22.04 desktop experience accessible through a web browser. The system creates a containerized virtual desktop environment with LXDE desktop manager, accessible via noVNC web interface, and secured with Cloudflare tunneling capabilities.
 
-أسلوب التواصل المفضل: لغة بسيطة وعادية بالعربية.
+## User Preferences
 
-# معمارية النظام
+Preferred communication style: Simple, everyday language.
 
-## استراتيجية التحوية (Containerization)
-يستخدم النظام تحوية Docker مع Ubuntu 22.04 كصورة أساسية لضمان النشر المتسق عبر بيئات مختلفة. هذا النهج يعزل بيئة سطح المكتب ويوفر قابلية النقل السهلة.
+## System Architecture
 
-## بيئة سطح المكتب
-- **خادم العرض**: يستخدم LXDE (بيئة سطح المكتب X11 الخفيفة) للأداء الأمثل في البيئات المحواة
-- **العرض الافتراضي**: ينفذ Xvfb (مخزن الإطارات الافتراضي X) لإنشاء خادم X افتراضي دون الحاجة لأجهزة عرض فعلية
-- **الوصول عن بُعد**: يستخدم خادم x11vnc لالتقاط سطح المكتب الافتراضي وجعله متاحاً عبر بروتوكول VNC
+### Containerization Strategy
+- **Base System**: Ubuntu 22.04 LTS for stability and long-term support
+- **Desktop Environment**: LXDE chosen for lightweight resource usage while maintaining full desktop functionality
+- **Display Management**: Xvfb (X Virtual Framebuffer) for headless display server operations
 
-## معمارية واجهة الويب
-- **تكامل noVNC**: ينفذ noVNC v1.2.0 كعميل VNC الأساسي القائم على الويب، مما يلغي حاجة المستخدمين لتثبيت برامج عميل VNC
-- **جسر WebSocket**: يستخدم websockify للترجمة بين بروتوكول VNC واتصالات WebSocket، مما يتيح الوصول عبر المتصفح
-- **طبقة الأمان**: ينفذ مصادقة كلمة مرور VNC (افتراضي: 123456) للتحكم الأساسي في الوصول
+### Remote Access Architecture
+- **VNC Server**: x11vnc provides the core screen sharing functionality with password protection
+- **Web Interface**: noVNC (v1.2.0) enables browser-based access without requiring VNC client software
+- **WebSocket Bridge**: websockify handles the protocol translation between HTTP/WebSocket and VNC
 
-## معمارية الشبكة
-- **الأنفاق العامة**: يتكامل مع Cloudflared للوصول الاختياري للإنترنت العام عبر أنفاق Cloudflare
-- **إدارة المنافذ**: يستخدم منافذ VNC القياسية مع إعادة توجيه واجهة الويب للوصول السلس عبر المتصفح
-- **التوافق متعدد المنصات**: مصمم للعمل عبر أجهزة سطح المكتب والجوال والأجهزة اللوحية من خلال واجهة ويب متجاوبة
+### Security and Networking
+- **Authentication**: Basic password protection (default: 123456) for VNC access
+- **Tunnel Solution**: Cloudflare's cloudflared for secure external access and bypassing firewall restrictions
+- **Network Tools**: Built-in utilities (net-tools, netcat) for connectivity troubleshooting
 
-## طبقة التطبيقات
-- **متصفح مثبت مسبقاً**: يتضمن متصفح Chromium مثبت عبر حزمة .deb يدوية لتجنب تبعيات snap
-- **إدارة الحزم**: يستخدم مدير حزم APT مع تكوين غير تفاعلي لمنع مطالبات التثبيت
-- **تكوين المنطقة الزمنية**: مُعد مسبقاً لمنطقة آسيا/الرياض الزمنية مع التعامل التلقائي مع التوقيت الصيفي
+### Browser Integration
+- **Web Browser**: Chromium browser manually installed (avoiding snap packages for container compatibility)
+- **Package Management**: Direct .deb installation to ensure proper integration with the containerized environment
 
-## استراتيجية النشر
-- **سكريبتات الإعداد**: يوفر سكريبتات إعداد وبدء تشغيل آلية (setup.sh، start.sh، start-simple.sh) للنشر السهل
-- **بيئة Replit**: يتضمن إصداراً مبسطاً للعمل في بيئة Replit بدون تبعيات نظام (start-simple.sh)
-- **بيئة Docker**: يوفر Dockerfile كامل لتشغيل المشروع في حاوية مع جميع التبعيات
-- **إدارة الأذونات**: يتضمن تكوين أذونات الملفات المناسبة للسكريبتات القابلة للتنفيذ
-- **متغيرات البيئة**: يستخدم DEBIAN_FRONTEND=noninteractive لضمان التثبيت الآلي دون مطالبات المستخدم
+### System Configuration
+- **Timezone**: Configured for Asia/Riyadh timezone with proper locale settings
+- **Non-interactive Setup**: All installations configured to avoid user prompts during container builds
+- **Process Management**: Designed for headless operation with automated service startup
 
-# التبعيات الخارجية
+## External Dependencies
 
-## متصفح Browsh
-- **Browsh**: متصفح نصي تفاعلي مكتوب بـ Go مع دعم JavaScript
-- **Firefox ESR**: متصفح بدون واجهة رسومية يدعم Browsh
-- **ملحق Firefox**: امتداد JavaScript لالتقاط وتحويل المحتوى المرئي
-- **Go**: بيئة تطوير لبناء مكونات Browsh الأساسية
+### Core Infrastructure
+- **Docker**: Container runtime environment for system deployment
+- **Ubuntu Package Repositories**: System packages and security updates source
 
-## تبعيات النظام الأساسية
-- **Ubuntu 22.04**: صورة نظام التشغيل الأساسية
-- **بيئة سطح مكتب LXDE**: حزمة بيئة سطح المكتب الخفيفة
-- **Xvfb**: خادم مخزن الإطارات الافتراضي للتشغيل بدون رأس
-- **x11vnc**: خادم VNC لمشاركة عرض X11
+### Remote Access Services
+- **noVNC Project**: Open-source HTML5 VNC client (GitHub: novnc/noVNC)
+- **Websockify**: WebSocket-to-TCP proxy service (GitHub: novnc/websockify)
+- **Cloudflare**: cloudflared binary for tunnel creation and external access
 
-## تقنيات الويب
-- **noVNC v1.2.0**: عميل VNC HTML5 من GitHub (novnc/noVNC)
-- **websockify**: وكيل WebSocket-to-TCP من GitHub (novnc/websockify)
-- **Python3**: بيئة تشغيل لمكونات websockify و noVNC
+### Desktop Components
+- **LXDE Desktop**: Lightweight desktop environment from Ubuntu repositories
+- **X11 System**: X Window System components for graphical interface
+- **Chromium Browser**: Web browser from Ubuntu security repositories
 
-## تكامل المتصفح
-- **متصفح Chromium**: تثبيت يدوي عبر حزمة .deb من مستودع Ubuntu الأمني
-- **متصفح Browsh**: متصفح نصي حديث مع دعم JavaScript كامل عبر Firefox
-- **تبعيات المتصفح**: المكتبات والتبعيات المرتبطة بوظائف Chromium وFirefox
-
-## خدمات الشبكة
-- **Cloudflared**: أحدث إصدار من إصدارات GitHub (cloudflare/cloudflared)
-- **أدوات الشبكة**: net-tools و netcat لتشخيص الشبكة والإدارة
-
-## أدوات التطوير
-- **Git**: نظام التحكم في الإصدارات لتنزيل noVNC و websockify
-- **curl**: عميل HTTP لعمليات الشبكة المختلفة
-- **wget**: أداة تنزيل الملفات لاسترداد الحزم
-
-## أدوات النظام
-- **tzdata**: حزمة بيانات المنطقة الزمنية لتكوين الوقت الدقيق
-- **Python3-pip**: مثبت الحزم لتبعيات Python (رغم أنه غير مستخدم بنشاط في الإعداد الحالي)
+### Development Tools
+- **Python 3**: Runtime environment with pip package manager
+- **Git**: Version control system for repository management
+- **System Utilities**: Network diagnostic and file management tools
