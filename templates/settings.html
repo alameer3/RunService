@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات النظام - نظام VNC Desktop المتطور{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-cog me-2"></i>إعدادات النظام</h2>
+            <div>
+                <button class="btn btn-success btn-sm" onclick="saveSettings()">
+                    <i class="fas fa-save me-1"></i>
+                    حفظ الإعدادات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- VNC Server Settings -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    إعدادات خادم VNC
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="vnc-settings-form">
+                    <div class="mb-3">
+                        <label for="vnc-password" class="form-label">كلمة المرور</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="vnc-password" value="vnc123456">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('vnc-password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">كلمة مرور للوصول إلى خادم VNC</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="screen-resolution" class="form-label">دقة الشاشة</label>
+                        <select class="form-select" id="screen-resolution">
+                            <option value="1024x768" selected>1024x768 (الافتراضية)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="1280x1024">1280x1024 (SXGA)</option>
+                            <option value="1920x1080">1920x1080 (Full HD)</option>
+                        </select>
+                        <div class="form-text">دقة شاشة VNC (يتطلب إعادة تشغيل)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="color-depth" class="form-label">عمق الألوان</label>
+                        <select class="form-select" id="color-depth">
+                            <option value="16">16 بت</option>
+                            <option value="24" selected>24 بت (الافتراضية)</option>
+                            <option value="32">32 بت</option>
+                        </select>
+                        <div class="form-text">عمق الألوان المعروضة</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="desktop-environment" class="form-label">بيئة سطح المكتب</label>
+                        <select class="form-select" id="desktop-environment">
+                            <option value="LXDE" selected>LXDE (خفيفة)</option>
+                            <option value="XFCE">XFCE (متوسطة)</option>
+                            <option value="GNOME">GNOME (كاملة)</option>
+                        </select>
+                        <div class="form-text">بيئة سطح المكتب المستخدمة</div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="auto-start" checked>
+                        <label class="form-check-label" for="auto-start">
+                            بدء تلقائي للخادم
+                        </label>
+                        <div class="form-text">بدء خادم VNC تلقائياً عند تشغيل النظام</div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Settings -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    إعدادات النظام العامة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="system-settings-form">
+                    <div class="mb-3">
+                        <label for="log-level" class="form-label">مستوى السجلات</label>
+                        <select class="form-select" id="log-level">
+                            <option value="DEBUG">تفصيلي (DEBUG)</option>
+                            <option value="INFO" selected>معلومات (INFO)</option>
+                            <option value="WARNING">تحذيرات (WARNING)</option>
+                            <option value="ERROR">أخطاء فقط (ERROR)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="session-timeout" class="form-label">مهلة الجلسة (دقيقة)</label>
+                        <input type="number" class="form-control" id="session-timeout" value="60" min="5" max="1440">
+                        <div class="form-text">مدة انتظار الجلسة قبل الإغلاق التلقائي</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max-connections" class="form-label">أقصى عدد اتصالات</label>
+                        <input type="number" class="form-control" id="max-connections" value="5" min="1" max="20">
+                        <div class="form-text">أقصى عدد اتصالات متزامنة</div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable-monitoring" checked>
+                        <label class="form-check-label" for="enable-monitoring">
+                            تفعيل مراقبة النظام
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable-notifications" checked>
+                        <label class="form-check-label" for="enable-notifications">
+                            تفعيل الإشعارات
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Security Settings -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    إعدادات الأمان
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="security-settings-form">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="require-password" checked>
+                        <label class="form-check-label" for="require-password">
+                            طلب كلمة مرور للاتصال
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="log-connections" checked>
+                        <label class="form-check-label" for="log-connections">
+                            تسجيل جميع الاتصالات
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="allowed-ips" class="form-label">عناوين IP المسموحة</label>
+                        <textarea class="form-control" id="allowed-ips" rows="3" placeholder="اتركه فارغاً للسماح لجميع العناوين&#10;أو أضف عنوان IP في كل سطر"></textarea>
+                        <div class="form-text">قائمة عناوين IP المسموح لها بالاتصال</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max-failed-attempts" class="form-label">أقصى محاولات فاشلة</label>
+                        <input type="number" class="form-control" id="max-failed-attempts" value="3" min="1" max="10">
+                        <div class="form-text">عدد المحاولات الفاشلة قبل الحظر المؤقت</div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Backup & Maintenance -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    النسخ الاحتياطي والصيانة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>النسخ الاحتياطي</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success" onclick="createBackup()">
+                            <i class="fas fa-archive me-2"></i>
+                            إنشاء نسخة احتياطية
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="downloadBackup()">
+                            <i class="fas fa-download me-2"></i>
+                            تحميل النسخة الاحتياطية
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="restoreBackup()">
+                            <i class="fas fa-upload me-2"></i>
+                            استعادة من نسخة احتياطية
+                        </button>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h6>الصيانة</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-info" onclick="clearLogs()">
+                            <i class="fas fa-broom me-2"></i>
+                            مسح السجلات القديمة
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="optimizeDatabase()">
+                            <i class="fas fa-database me-2"></i>
+                            تحسين قاعدة البيانات
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="resetSystem()">
+                            <i class="fas fa-undo me-2"></i>
+                            إعادة تعيين النظام
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Information -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات النظام
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <strong>إصدار النظام:</strong><br>
+                        <span class="text-muted" id="system-version">VNC Desktop v2.0.0</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>وقت التشغيل:</strong><br>
+                        <span class="text-muted" id="uptime">-</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>آخر تحديث للإعدادات:</strong><br>
+                        <span class="text-muted" id="last-config-update">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function saveSettings() {
+    // Collect all settings
+    const settings = {
+        vnc: {
+            password: $('#vnc-password').val(),
+            resolution: $('#screen-resolution').val(),
+            colorDepth: $('#color-depth').val(),
+            desktopEnvironment: $('#desktop-environment').val(),
+            autoStart: $('#auto-start').is(':checked')
+        },
+        system: {
+            logLevel: $('#log-level').val(),
+            sessionTimeout: $('#session-timeout').val(),
+            maxConnections: $('#max-connections').val(),
+            enableMonitoring: $('#enable-monitoring').is(':checked'),
+            enableNotifications: $('#enable-notifications').is(':checked')
+        },
+        security: {
+            requirePassword: $('#require-password').is(':checked'),
+            logConnections: $('#log-connections').is(':checked'),
+            allowedIps: $('#allowed-ips').val().split('\n').filter(ip => ip.trim()),
+            maxFailedAttempts: $('#max-failed-attempts').val()
+        }
+    };
+    
+    // Show loading
+    const saveBtn = $('button:contains("حفظ الإعدادات")');
+    const originalText = saveBtn.html();
+    saveBtn.prop('disabled', true).html('<span class="loading"></span> جاري الحفظ...');
+    
+    // Simulate save operation
+    setTimeout(function() {
+        saveBtn.prop('disabled', false).html(originalText);
+        showNotification('تم حفظ الإعدادات بنجاح', 'success');
+        updateLastConfigUpdate();
+    }, 1500);
+}
+
+function togglePassword(fieldId) {
+    const field = $('#' + fieldId);
+    const button = field.next('.btn');
+    const icon = button.find('i');
+    
+    if (field.attr('type') === 'password') {
+        field.attr('type', 'text');
+        icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        field.attr('type', 'password');
+        icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+}
+
+function createBackup() {
+    showNotification('جاري إنشاء النسخة الاحتياطية...', 'info');
+    setTimeout(function() {
+        showNotification('تم إنشاء النسخة الاحتياطية بنجاح', 'success');
+    }, 2000);
+}
+
+function downloadBackup() {
+    showNotification('جاري تحضير النسخة الاحتياطية للتحميل...', 'info');
+    // In real implementation, this would trigger a download
+}
+
+function restoreBackup() {
+    if (confirm('هل أنت متأكد من استعادة النسخة الاحتياطية؟ سيتم استبدال جميع الإعدادات الحالية.')) {
+        showNotification('جاري استعادة النسخة الاحتياطية...', 'info');
+        setTimeout(function() {
+            showNotification('تم استعادة النسخة الاحتياطية بنجاح', 'success');
+        }, 3000);
+    }
+}
+
+function clearLogs() {
+    if (confirm('هل أنت متأكد من مسح السجلات القديمة؟')) {
+        showNotification('جاري مسح السجلات...', 'info');
+        setTimeout(function() {
+            showNotification('تم مسح السجلات القديمة بنجاح', 'success');
+        }, 1500);
+    }
+}
+
+function optimizeDatabase() {
+    showNotification('جاري تحسين قاعدة البيانات...', 'info');
+    setTimeout(function() {
+        showNotification('تم تحسين قاعدة البيانات بنجاح', 'success');
+    }, 2500);
+}
+
+function resetSystem() {
+    if (confirm('هل أنت متأكد من إعادة تعيين النظام؟ سيتم حذف جميع الإعدادات والبيانات!')) {
+        if (confirm('تحذير: هذا الإجراء لا يمكن التراجع عنه. هل أنت متأكد؟')) {
+            showNotification('جاري إعادة تعيين النظام...', 'warning');
+            setTimeout(function() {
+                showNotification('تم إعادة تعيين النظام بنجاح', 'success');
+                location.reload();
+            }, 3000);
+        }
+    }
+}
+
+function updateLastConfigUpdate() {
+    $('#last-config-update').text(new Date().toLocaleString('ar-SA'));
+}
+
+// Initialize page
+$(document).ready(function() {
+    updateLastConfigUpdate();
+    
+    // Update uptime (simulated)
+    let startTime = Date.now();
+    setInterval(function() {
+        let uptime = Math.floor((Date.now() - startTime) / 1000);
+        let hours = Math.floor(uptime / 3600);
+        let minutes = Math.floor((uptime % 3600) / 60);
+        $('#uptime').text(`${hours} ساعة، ${minutes} دقيقة`);
+    }, 60000);
+    
+    // Initial uptime display
+    $('#uptime').text('أقل من دقيقة');
+});
+</script>
+{% endblock %}

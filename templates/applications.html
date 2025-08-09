@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}مدير التطبيقات - نظام VNC Desktop المتطور{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-th-large me-2"></i>مدير التطبيقات</h2>
+            <div>
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshApps()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    تحديث
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Installed Applications -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2 text-success"></i>
+                    التطبيقات المثبتة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="installed-apps" class="row g-3">
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        جاري تحميل التطبيقات المثبتة...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Available Applications -->
+    <div class="col-lg-6 mb-4">
+        <div class="card status-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-download me-2 text-primary"></i>
+                    التطبيقات المتاحة للتثبيت
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="available-apps" class="row g-3">
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        جاري تحميل التطبيقات المتاحة...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Installation Progress Modal -->
+<div class="modal fade" id="installModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تثبيت التطبيق</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-download fa-3x text-primary mb-3"></i>
+                <h6 id="installing-app-name">جاري تثبيت التطبيق...</h6>
+                <div class="progress mt-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 100%"></div>
+                </div>
+                <p class="text-muted mt-2">يرجى الانتظار، قد تستغرق العملية بضع دقائق</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let installedApps = [];
+let availableApps = [];
+
+function refreshApps() {
+    loadInstalledApps();
+    loadAvailableApps();
+}
+
+function loadInstalledApps() {
+    $('#installed-apps').html(`
+        <div class="col-12 text-center text-muted">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            جاري تحميل التطبيقات المثبتة...
+        </div>
+    `);
+    
+    // Simulate installed apps data
+    setTimeout(function() {
+        installedApps = [
+            {
+                name: 'firefox-esr',
+                display_name: 'Firefox ESR',
+                category: 'browser',
+                description: 'متصفح فايرفوكس المستقر والآمن',
+                version: '115.0',
+                icon: 'fab fa-firefox-browser'
+            },
+            {
+                name: 'gedit',
+                display_name: 'محرر النصوص',
+                category: 'editor',
+                description: 'محرر نصوص بسيط وسهل الاستخدام',
+                version: '42.0',
+                icon: 'fas fa-edit'
+            }
+        ];
+        
+        renderInstalledApps();
+    }, 1000);
+}
+
+function loadAvailableApps() {
+    $('#available-apps').html(`
+        <div class="col-12 text-center text-muted">
+            <i class="fas fa-spinner fa-spin me-2"></i>
+            جاري تحميل التطبيقات المتاحة...
+        </div>
+    `);
+    
+    // Load from server
+    makeRequest('/api/apps/available')
+        .done(function(data) {
+            availableApps = [
+                {
+                    name: 'chromium-browser',
+                    display_name: 'Chromium',
+                    category: 'browser',
+                    description: 'متصفح كروميوم مفتوح المصدر',
+                    icon: 'fab fa-chrome'
+                },
+                {
+                    name: 'libreoffice',
+                    display_name: 'LibreOffice',
+                    category: 'office',
+                    description: 'مجموعة مكتبية متكاملة ومجانية',
+                    icon: 'fas fa-file-alt'
+                },
+                {
+                    name: 'vlc',
+                    display_name: 'VLC Media Player',
+                    category: 'multimedia',
+                    description: 'مشغل وسائط متعدد الأغراض',
+                    icon: 'fas fa-play'
+                },
+                {
+                    name: 'gimp',
+                    display_name: 'GIMP',
+                    category: 'graphics',
+                    description: 'برنامج تحرير الصور المتقدم',
+                    icon: 'fas fa-image'
+                }
+            ];
+            
+            renderAvailableApps();
+        })
+        .fail(function() {
+            availableApps = [
+                {
+                    name: 'chromium-browser',
+                    display_name: 'Chromium',
+                    category: 'browser',
+                    description: 'متصفح كروميوم مفتوح المصدر',
+                    icon: 'fab fa-chrome'
+                },
+                {
+                    name: 'libreoffice',
+                    display_name: 'LibreOffice',
+                    category: 'office',
+                    description: 'مجموعة مكتبية متكاملة ومجانية',
+                    icon: 'fas fa-file-alt'
+                }
+            ];
+            
+            renderAvailableApps();
+        });
+}
+
+function renderInstalledApps() {
+    if (installedApps.length === 0) {
+        $('#installed-apps').html(`
+            <div class="col-12 text-center text-muted">
+                <i class="fas fa-info-circle me-2"></i>
+                لا توجد تطبيقات مثبتة حالياً
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '';
+    installedApps.forEach(app => {
+        html += `
+            <div class="col-md-6">
+                <div class="card app-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="${app.icon} fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">${app.display_name}</h6>
+                                <small class="text-muted d-block mb-2">الإصدار: ${app.version}</small>
+                                <p class="card-text small">${app.description}</p>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="launchApp('${app.name}')">
+                                        <i class="fas fa-play me-1"></i>
+                                        تشغيل
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="uninstallApp('${app.name}')">
+                                        <i class="fas fa-trash me-1"></i>
+                                        إزالة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#installed-apps').html(html);
+}
+
+function renderAvailableApps() {
+    if (availableApps.length === 0) {
+        $('#available-apps').html(`
+            <div class="col-12 text-center text-muted">
+                <i class="fas fa-info-circle me-2"></i>
+                لا توجد تطبيقات متاحة للتثبيت
+            </div>
+        `);
+        return;
+    }
+    
+    let html = '';
+    availableApps.forEach(app => {
+        const isInstalled = installedApps.some(installed => installed.name === app.name);
+        
+        html += `
+            <div class="col-md-6">
+                <div class="card app-card h-100 ${isInstalled ? 'bg-light' : ''}">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="${app.icon} fa-2x ${isInstalled ? 'text-muted' : 'text-success'}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">
+                                    ${app.display_name}
+                                    ${isInstalled ? '<span class="badge bg-success ms-2">مثبت</span>' : ''}
+                                </h6>
+                                <small class="text-muted d-block mb-2">الفئة: ${getCategoryName(app.category)}</small>
+                                <p class="card-text small">${app.description}</p>
+                                <button class="btn btn-sm btn-primary" 
+                                        onclick="installApp('${app.name}', '${app.display_name}')"
+                                        ${isInstalled ? 'disabled' : ''}>
+                                    <i class="fas fa-download me-1"></i>
+                                    ${isInstalled ? 'مثبت بالفعل' : 'تثبيت'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    $('#available-apps').html(html);
+}
+
+function getCategoryName(category) {
+    const categories = {
+        'browser': 'متصفح',
+        'editor': 'محرر',
+        'office': 'مكتبي',
+        'multimedia': 'وسائط',
+        'graphics': 'رسوميات',
+        'development': 'تطوير'
+    };
+    return categories[category] || category;
+}
+
+function installApp(appName, displayName) {
+    // Show installation modal
+    $('#installing-app-name').text(`جاري تثبيت ${displayName}...`);
+    $('#installModal').modal('show');
+    
+    // Make API request
+    makeRequest('/api/apps/install', 'POST', { app_name: appName })
+        .done(function(data) {
+            $('#installModal').modal('hide');
+            if (data.success) {
+                showNotification(`تم تثبيت ${displayName} بنجاح`, 'success');
+                refreshApps();
+            } else {
+                showNotification(`فشل في تثبيت ${displayName}: ${data.message}`, 'danger');
+            }
+        })
+        .fail(function() {
+            $('#installModal').modal('hide');
+            showNotification(`خطأ في تثبيت ${displayName}`, 'danger');
+        });
+}
+
+function launchApp(appName) {
+    showNotification(`جاري تشغيل ${appName}...`, 'info');
+    // In a real implementation, this would launch the app in VNC
+}
+
+function uninstallApp(appName) {
+    if (confirm('هل أنت متأكد من إزالة هذا التطبيق؟')) {
+        showNotification(`جاري إزالة ${appName}...`, 'info');
+        // In a real implementation, this would uninstall the app
+        setTimeout(function() {
+            showNotification('تم إزالة التطبيق بنجاح', 'success');
+            refreshApps();
+        }, 2000);
+    }
+}
+
+// Socket event handlers
+socket.on('app_installed', function(data) {
+    refreshApps();
+});
+
+// Initialize
+$(document).ready(function() {
+    refreshApps();
+});
+</script>
+
+<style>
+.app-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.app-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}

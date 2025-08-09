@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}الصفحة الرئيسية - نظام VNC Desktop المتطور{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Header Section -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 text-primary mb-3">
+                <i class="fas fa-desktop me-3"></i>
+                نظام VNC Desktop المتطور
+            </h1>
+            <p class="lead text-muted">
+                منصة متكاملة للوصول البعيد إلى بيئة سطح المكتب Linux مع واجهة تحكم احترافية
+            </p>
+        </div>
+
+        <!-- Server Status Card -->
+        <div class="card status-card" id="status-card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-server me-2"></i>
+                    حالة الخادم
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="status-indicator me-3" id="status-indicator">
+                                <i class="fas fa-circle text-secondary fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">خادم VNC</h6>
+                                <span class="text-muted" id="status-text">جاري الفحص...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="server-info" id="server-info" style="display: none;">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-network-wired me-1"></i>
+                                المنفذ: <span id="server-port">-</span>
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-desktop me-1"></i>
+                                الدقة: <span id="server-resolution">-</span>
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-users me-1"></i>
+                                الجلسات النشطة: <span id="active-sessions">0</span>
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 text-md-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success" id="start-btn" onclick="startVNC()">
+                                <i class="fas fa-play me-2"></i>
+                                بدء التشغيل
+                            </button>
+                            <button type="button" class="btn btn-danger" id="stop-btn" onclick="stopVNC()" disabled>
+                                <i class="fas fa-stop me-2"></i>
+                                إيقاف
+                            </button>
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary mt-2 d-block" onclick="refreshStatus()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            تحديث الحالة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information Card -->
+        <div class="card status-card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات النظام
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="system-info-content">
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-microchip fa-2x text-primary mb-2"></i>
+                            <h6>المعالج</h6>
+                            <span class="text-muted" id="cpu-usage">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-memory fa-2x text-success mb-2"></i>
+                            <h6>الذاكرة</h6>
+                            <span class="text-muted" id="memory-usage">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-hdd fa-2x text-warning mb-2"></i>
+                            <h6>التخزين</h6>
+                            <span class="text-muted" id="disk-usage">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card status-card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    إجراءات سريعة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="/dashboard" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-chart-line me-2"></i>
+                            لوحة التحكم المتقدمة
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/apps" class="btn btn-outline-success w-100">
+                            <i class="fas fa-th-large me-2"></i>
+                            مدير التطبيقات
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/settings" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-cog me-2"></i>
+                            إعدادات النظام
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="/logs" class="btn btn-outline-info w-100">
+                            <i class="fas fa-file-alt me-2"></i>
+                            سجلات النظام
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Instructions -->
+        <div class="card status-card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plug me-2"></i>
+                    تعليمات الاتصال
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>للاتصال بخادم VNC:</h6>
+                    <ol class="mb-0">
+                        <li>تأكد من تشغيل الخادم باستخدام زر "بدء التشغيل"</li>
+                        <li>استخدم برنامج VNC Viewer</li>
+                        <li>اتصل بالعنوان: <code id="vnc-address">localhost:5901</code></li>
+                        <li>أدخل كلمة المرور: <code>vnc123456</code></li>
+                    </ol>
+                </div>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        يمكنك تحميل VNC Viewer من 
+                        <a href="https://www.realvnc.com/en/connect/download/viewer/" target="_blank">
+                            الموقع الرسمي
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let isLoading = false;
+
+function startVNC() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    const startBtn = $('#start-btn');
+    const originalText = startBtn.html();
+    
+    startBtn.prop('disabled', true).html('<span class="loading"></span> جاري البدء...');
+    
+    makeRequest('/api/vnc/start', 'POST')
+        .done(function(data) {
+            if (data.success) {
+                showNotification('تم بدء خادم VNC بنجاح', 'success');
+                updateUIStatus(true);
+            } else {
+                showNotification('فشل في بدء خادم VNC: ' + data.message, 'danger');
+            }
+        })
+        .fail(function() {
+            showNotification('خطأ في الاتصال بالخادم', 'danger');
+        })
+        .always(function() {
+            isLoading = false;
+            startBtn.prop('disabled', false).html(originalText);
+        });
+}
+
+function stopVNC() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    const stopBtn = $('#stop-btn');
+    const originalText = stopBtn.html();
+    
+    stopBtn.prop('disabled', true).html('<span class="loading"></span> جاري الإيقاف...');
+    
+    makeRequest('/api/vnc/stop', 'POST')
+        .done(function(data) {
+            if (data.success) {
+                showNotification('تم إيقاف خادم VNC بنجاح', 'success');
+                updateUIStatus(false);
+            } else {
+                showNotification('فشل في إيقاف خادم VNC: ' + data.message, 'danger');
+            }
+        })
+        .fail(function() {
+            showNotification('خطأ في الاتصال بالخادم', 'danger');
+        })
+        .always(function() {
+            isLoading = false;
+            stopBtn.prop('disabled', false).html(originalText);
+        });
+}
+
+function refreshStatus() {
+    makeRequest('/api/vnc/status')
+        .done(function(data) {
+            updateVNCStatus(data);
+            showNotification('تم تحديث الحالة', 'info');
+        })
+        .fail(function() {
+            showNotification('فشل في تحديث الحالة', 'warning');
+        });
+    
+    // Update system info
+    makeRequest('/api/system/info')
+        .done(function(data) {
+            updateSystemInfo(data);
+        });
+}
+
+function updateVNCStatus(status) {
+    updateUIStatus(status.is_running);
+    
+    if (status.is_running && status.active_sessions.length > 0) {
+        const session = status.active_sessions[0];
+        $('#server-port').text(session.port);
+        $('#active-sessions').text(status.total_sessions);
+        $('#vnc-address').text(`localhost:${session.port}`);
+        $('#server-info').show();
+    } else {
+        $('#server-info').hide();
+    }
+}
+
+function updateUIStatus(isRunning) {
+    const statusCard = $('#status-card');
+    const statusIndicator = $('#status-indicator i');
+    const statusText = $('#status-text');
+    const startBtn = $('#start-btn');
+    const stopBtn = $('#stop-btn');
+    
+    if (isRunning) {
+        statusCard.addClass('status-online').removeClass('status-offline');
+        statusIndicator.removeClass('text-secondary text-danger').addClass('text-success pulse');
+        statusText.text('يعمل بنجاح');
+        startBtn.prop('disabled', true);
+        stopBtn.prop('disabled', false);
+    } else {
+        statusCard.addClass('status-offline').removeClass('status-online');
+        statusIndicator.removeClass('text-secondary text-success pulse').addClass('text-danger');
+        statusText.text('متوقف');
+        startBtn.prop('disabled', false);
+        stopBtn.prop('disabled', true);
+    }
+}
+
+function updateSystemInfo(info) {
+    if (info.performance) {
+        $('#cpu-usage').text(info.performance.cpu_percent + '%');
+        $('#memory-usage').text(info.performance.memory_percent + '%');
+        $('#disk-usage').text(info.performance.disk_percent + '%');
+    }
+}
+
+// Socket event handlers
+socket.on('vnc_status_update', updateVNCStatus);
+socket.on('system_info_update', updateSystemInfo);
+
+// Initialize on page load
+$(document).ready(function() {
+    refreshStatus();
+});
+</script>
+{% endblock %}

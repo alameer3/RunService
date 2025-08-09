@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+
+{% block title %}سجلات النظام - نظام VNC Desktop المتطور{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-file-alt me-2"></i>سجلات النظام</h2>
+            <div>
+                <button class="btn btn-outline-danger btn-sm me-2" onclick="clearAllLogs()">
+                    <i class="fas fa-trash me-1"></i>
+                    مسح جميع السجلات
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="refreshLogs()">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    تحديث
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label for="log-level-filter" class="form-label">مستوى السجل</label>
+                        <select class="form-select form-select-sm" id="log-level-filter">
+                            <option value="">جميع المستويات</option>
+                            <option value="INFO">معلومات</option>
+                            <option value="WARNING">تحذيرات</option>
+                            <option value="ERROR">أخطاء</option>
+                            <option value="CRITICAL">حرجة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="log-category-filter" class="form-label">الفئة</label>
+                        <select class="form-select form-select-sm" id="log-category-filter">
+                            <option value="">جميع الفئات</option>
+                            <option value="VNC">VNC</option>
+                            <option value="SYSTEM">نظام</option>
+                            <option value="APP">تطبيق</option>
+                            <option value="SECURITY">أمان</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="log-search" class="form-label">البحث</label>
+                        <input type="text" class="form-control form-control-sm" id="log-search" placeholder="البحث في الرسائل...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date-from" class="form-label">من التاريخ</label>
+                        <input type="date" class="form-control form-control-sm" id="date-from">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date-to" class="form-label">إلى التاريخ</label>
+                        <input type="date" class="form-control form-control-sm" id="date-to">
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-primary btn-sm w-100" onclick="applyFilters()">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs Display -->
+<div class="row">
+    <div class="col-12">
+        <div class="card status-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    سجلات مفصلة
+                </h5>
+                <div>
+                    <span class="badge bg-primary" id="log-count">0 سجل</span>
+                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleAutoRefresh()">
+                        <i class="fas fa-play" id="auto-refresh-icon"></i>
+                        <span id="auto-refresh-text">تحديث تلقائي</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                    <table class="table table-hover mb-0" id="logs-table">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th style="width: 140px;">الوقت</th>
+                                <th style="width: 80px;">المستوى</th>
+                                <th style="width: 100px;">الفئة</th>
+                                <th style="width: 120px;">المكون</th>
+                                <th>الرسالة</th>
+                                <th style="width: 60px;">تفاصيل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    جاري تحميل السجلات...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        آخر تحديث: <span id="last-refresh">-</span>
+                    </small>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0" id="log-pagination">
+                            <!-- Pagination will be dynamically generated -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل السجل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="log-details-content">
+                    <!-- Details will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let allLogs = [];
+let filteredLogs = [];
+let currentPage = 1;
+let logsPerPage = 50;
+let autoRefreshInterval = null;
+let isAutoRefreshing = false;
+
+// Sample log data
+const sampleLogs = [
+    {
+        id: 1,
+        timestamp: new Date(Date.now() - 300000).toISOString(),
+        level: 'INFO',
+        category: 'VNC',
+        component: 'vnc_manager',
+        message: 'تم بدء خادم VNC بنجاح على المنفذ 5901',
+        details: JSON.stringify({port: 5901, display: 1, resolution: '1024x768'})
+    },
+    {
+        id: 2,
+        timestamp: new Date(Date.now() - 240000).toISOString(),
+        level: 'INFO',
+        category: 'SYSTEM',
+        component: 'system_monitor',
+        message: 'مراقب النظام يعمل بشكل طبيعي',
+        details: JSON.stringify({cpu: 15.2, memory: 45.8, disk: 23.1})
+    },
+    {
+        id: 3,
+        timestamp: new Date(Date.now() - 180000).toISOString(),
+        level: 'WARNING',
+        category: 'SYSTEM',
+        component: 'performance',
+        message: 'استخدام الذاكرة مرتفع: 78%',
+        details: JSON.stringify({memory_percent: 78, threshold: 75})
+    },
+    {
+        id: 4,
+        timestamp: new Date(Date.now() - 120000).toISOString(),
+        level: 'INFO',
+        category: 'APP',
+        component: 'app_manager',
+        message: 'تم تثبيت Firefox ESR بنجاح',
+        details: JSON.stringify({app: 'firefox-esr', version: '115.0'})
+    },
+    {
+        id: 5,
+        timestamp: new Date(Date.now() - 60000).toISOString(),
+        level: 'ERROR',
+        category: 'VNC',
+        component: 'vnc_manager',
+        message: 'فشل في الاتصال بخادم العرض :1',
+        details: JSON.stringify({display: 1, error: 'Connection refused'})
+    }
+];
+
+function loadLogs() {
+    // In a real implementation, this would fetch from the server
+    allLogs = [...sampleLogs];
+    
+    // Generate more sample logs
+    for (let i = 6; i <= 100; i++) {
+        const levels = ['INFO', 'WARNING', 'ERROR', 'CRITICAL'];
+        const categories = ['VNC', 'SYSTEM', 'APP', 'SECURITY'];
+        const components = ['vnc_manager', 'system_monitor', 'app_manager', 'security'];
+        
+        allLogs.push({
+            id: i,
+            timestamp: new Date(Date.now() - (i * 30000)).toISOString(),
+            level: levels[Math.floor(Math.random() * levels.length)],
+            category: categories[Math.floor(Math.random() * categories.length)],
+            component: components[Math.floor(Math.random() * components.length)],
+            message: `رسالة سجل نموذجية رقم ${i}`,
+            details: JSON.stringify({sample: true, id: i})
+        });
+    }
+    
+    applyFilters();
+}
+
+function applyFilters() {
+    const levelFilter = $('#log-level-filter').val();
+    const categoryFilter = $('#log-category-filter').val();
+    const searchFilter = $('#log-search').val().toLowerCase();
+    const dateFrom = $('#date-from').val();
+    const dateTo = $('#date-to').val();
+    
+    filteredLogs = allLogs.filter(log => {
+        // Level filter
+        if (levelFilter && log.level !== levelFilter) return false;
+        
+        // Category filter
+        if (categoryFilter && log.category !== categoryFilter) return false;
+        
+        // Search filter
+        if (searchFilter && !log.message.toLowerCase().includes(searchFilter)) return false;
+        
+        // Date filters
+        const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+        if (dateFrom && logDate < dateFrom) return false;
+        if (dateTo && logDate > dateTo) return false;
+        
+        return true;
+    });
+    
+    currentPage = 1;
+    displayLogs();
+    updateLogCount();
+    generatePagination();
+}
+
+function displayLogs() {
+    const startIndex = (currentPage - 1) * logsPerPage;
+    const endIndex = startIndex + logsPerPage;
+    const logsToShow = filteredLogs.slice(startIndex, endIndex);
+    
+    if (logsToShow.length === 0) {
+        $('#logs-tbody').html(`
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لا توجد سجلات تطابق المرشحات المحددة
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    
+    let html = '';
+    logsToShow.forEach(log => {
+        const timeString = new Date(log.timestamp).toLocaleString('ar-SA');
+        const levelClass = getLevelClass(log.level);
+        const levelIcon = getLevelIcon(log.level);
+        
+        html += `
+            <tr>
+                <td class="small">${timeString}</td>
+                <td>
+                    <span class="badge ${levelClass}">
+                        <i class="${levelIcon} me-1"></i>
+                        ${log.level}
+                    </span>
+                </td>
+                <td><span class="badge bg-secondary">${log.category}</span></td>
+                <td class="small text-muted">${log.component}</td>
+                <td class="text-truncate" style="max-width: 300px;" title="${log.message}">
+                    ${log.message}
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showLogDetails(${log.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#logs-tbody').html(html);
+    $('#last-refresh').text(new Date().toLocaleString('ar-SA'));
+}
+
+function getLevelClass(level) {
+    const classes = {
+        'INFO': 'bg-info',
+        'WARNING': 'bg-warning',
+        'ERROR': 'bg-danger',
+        'CRITICAL': 'bg-dark'
+    };
+    return classes[level] || 'bg-secondary';
+}
+
+function getLevelIcon(level) {
+    const icons = {
+        'INFO': 'fas fa-info-circle',
+        'WARNING': 'fas fa-exclamation-triangle',
+        'ERROR': 'fas fa-times-circle',
+        'CRITICAL': 'fas fa-skull'
+    };
+    return icons[level] || 'fas fa-question-circle';
+}
+
+function updateLogCount() {
+    $('#log-count').text(`${filteredLogs.length} سجل`);
+}
+
+function generatePagination() {
+    const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+    
+    if (totalPages <= 1) {
+        $('#log-pagination').empty();
+        return;
+    }
+    
+    let html = '';
+    
+    // Previous button
+    html += `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">السابق</a>
+        </li>
+    `;
+    
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Next button
+    html += `
+        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">التالي</a>
+        </li>
+    `;
+    
+    $('#log-pagination').html(html);
+}
+
+function changePage(page) {
+    const totalPages = Math.ceil(filteredLogs.length / logsPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    displayLogs();
+    generatePagination();
+}
+
+function showLogDetails(logId) {
+    const log = allLogs.find(l => l.id === logId);
+    if (!log) return;
+    
+    const timeString = new Date(log.timestamp).toLocaleString('ar-SA');
+    const levelClass = getLevelClass(log.level);
+    const levelIcon = getLevelIcon(log.level);
+    
+    let detailsHtml = '';
+    if (log.details) {
+        try {
+            const details = JSON.parse(log.details);
+            detailsHtml = '<pre class="bg-light p-3 rounded small">' + JSON.stringify(details, null, 2) + '</pre>';
+        } catch (e) {
+            detailsHtml = '<p class="text-muted">لا توجد تفاصيل إضافية</p>';
+        }
+    }
+    
+    $('#log-details-content').html(`
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>الوقت:</strong></div>
+            <div class="col-sm-9">${timeString}</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>المستوى:</strong></div>
+            <div class="col-sm-9">
+                <span class="badge ${levelClass}">
+                    <i class="${levelIcon} me-1"></i>
+                    ${log.level}
+                </span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>الفئة:</strong></div>
+            <div class="col-sm-9"><span class="badge bg-secondary">${log.category}</span></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>المكون:</strong></div>
+            <div class="col-sm-9"><code>${log.component}</code></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3"><strong>الرسالة:</strong></div>
+            <div class="col-sm-9">${log.message}</div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><strong>التفاصيل:</strong></div>
+            <div class="col-sm-9">${detailsHtml}</div>
+        </div>
+    `);
+    
+    $('#logDetailsModal').modal('show');
+}
+
+function refreshLogs() {
+    loadLogs();
+    showNotification('تم تحديث السجلات', 'info');
+}
+
+function clearAllLogs() {
+    if (confirm('هل أنت متأكد من مسح جميع السجلات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        allLogs = [];
+        filteredLogs = [];
+        displayLogs();
+        updateLogCount();
+        generatePagination();
+        showNotification('تم مسح جميع السجلات', 'success');
+    }
+}
+
+function toggleAutoRefresh() {
+    if (isAutoRefreshing) {
+        clearInterval(autoRefreshInterval);
+        isAutoRefreshing = false;
+        $('#auto-refresh-icon').removeClass('fa-stop').addClass('fa-play');
+        $('#auto-refresh-text').text('تحديث تلقائي');
+        showNotification('تم إيقاف التحديث التلقائي', 'info');
+    } else {
+        autoRefreshInterval = setInterval(refreshLogs, 10000); // Refresh every 10 seconds
+        isAutoRefreshing = true;
+        $('#auto-refresh-icon').removeClass('fa-play').addClass('fa-stop');
+        $('#auto-refresh-text').text('إيقاف التحديث');
+        showNotification('تم تفعيل التحديث التلقائي', 'success');
+    }
+}
+
+// Event listeners
+$(document).ready(function() {
+    loadLogs();
+    
+    // Filter event listeners
+    $('#log-level-filter, #log-category-filter').change(applyFilters);
+    $('#log-search').on('input', debounce(applyFilters, 500));
+    $('#date-from, #date-to').change(applyFilters);
+    
+    // Set default date range to today
+    const today = new Date().toISOString().split('T')[0];
+    $('#date-to').val(today);
+});
+
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Prevent page reload on pagination link clicks
+$(document).on('click', '.page-link', function(e) {
+    e.preventDefault();
+});
+</script>
+{% endblock %}

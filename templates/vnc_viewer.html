@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}عارض VNC - نظام VNC Desktop المتطور{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-desktop me-2"></i>عارض VNC عبر الويب</h2>
+            <div>
+                <button class="btn btn-success btn-sm me-2" id="connect-btn" onclick="connectVNC()">
+                    <i class="fas fa-plug me-1"></i>
+                    اتصال
+                </button>
+                <button class="btn btn-warning btn-sm me-2" id="screenshot-btn" onclick="takeScreenshot()" disabled>
+                    <i class="fas fa-camera me-1"></i>
+                    لقطة شاشة
+                </button>
+                <button class="btn btn-danger btn-sm" id="disconnect-btn" onclick="disconnectVNC()" disabled>
+                    <i class="fas fa-times me-1"></i>
+                    قطع الاتصال
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Connection Status -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info" id="connection-status">
+            <i class="fas fa-info-circle me-2"></i>
+            جاهز للاتصال - اضغط على زر "اتصال" للبدء
+        </div>
+    </div>
+</div>
+
+<!-- VNC Viewer -->
+<div class="row">
+    <div class="col-12">
+        <div class="card status-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tv me-2"></i>
+                    شاشة VNC Desktop
+                </h5>
+                <div>
+                    <span class="badge bg-secondary" id="resolution-badge">1024x768</span>
+                    <span class="badge bg-info ms-2" id="status-badge">غير متصل</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="vnc-container" style="position: relative; background: #2c3e50; min-height: 500px;">
+                    <div id="vnc-screen" style="width: 100%; height: 500px; display: flex; align-items: center; justify-content: center;">
+                        <div class="text-center text-white">
+                            <i class="fas fa-desktop fa-5x mb-3 opacity-50"></i>
+                            <h4>VNC Desktop</h4>
+                            <p class="mb-0">اضغط "اتصال" لبدء جلسة VNC</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Overlay -->
+                    <div id="loading-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                                                   background: rgba(0,0,0,0.8); display: none; z-index: 10;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                                   text-align: center; color: white;">
+                            <div class="spinner-border mb-3" role="status"></div>
+                            <h5 id="loading-text">جاري الاتصال...</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            وقت الاتصال: <span id="connection-time">00:00:00</span>
+                        </small>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            <i class="fas fa-mouse-pointer me-1"></i>
+                            الماوس: <span id="mouse-pos">-</span>
+                        </small>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">
+                            <i class="fas fa-keyboard me-1"></i>
+                            لوحة المفاتيح: <span id="keyboard-status">نشطة</span>
+                        </small>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary" onclick="toggleFullscreen()" title="شاشة كاملة">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="toggleKeyboard()" title="لوحة مفاتيح افتراضية">
+                                <i class="fas fa-keyboard"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="refreshScreen()" title="تحديث الشاشة">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Virtual Keyboard -->
+<div class="row mt-3" id="virtual-keyboard" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-keyboard me-2"></i>
+                    لوحة المفاتيح الافتراضية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="virtual-keyboard-layout">
+                    <!-- Row 1 -->
+                    <div class="kb-row mb-2">
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Escape')">Esc</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('1')">1</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('2')">2</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('3')">3</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('4')">4</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('5')">5</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('6')">6</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('7')">7</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('8')">8</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('9')">9</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('0')">0</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="sendKey('Backspace')">⌫</button>
+                    </div>
+                    
+                    <!-- Row 2 -->
+                    <div class="kb-row mb-2">
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Tab')">Tab</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('q')">Q</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('w')">W</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('e')">E</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('r')">R</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('t')">T</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('y')">Y</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('u')">U</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('i')">I</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('o')">O</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('p')">P</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="sendKey('Enter')">↵</button>
+                    </div>
+                    
+                    <!-- Row 3 -->
+                    <div class="kb-row mb-2">
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('CapsLock')">Caps</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('a')">A</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('s')">S</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('d')">D</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('f')">F</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('g')">G</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('h')">H</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('j')">J</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('k')">K</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('l')">L</button>
+                    </div>
+                    
+                    <!-- Row 4 -->
+                    <div class="kb-row mb-2">
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Shift')">Shift</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('z')">Z</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('x')">X</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('c')">C</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('v')">V</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('b')">B</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('n')">N</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('m')">M</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Shift')">Shift</button>
+                    </div>
+                    
+                    <!-- Row 5 -->
+                    <div class="kb-row">
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Control')">Ctrl</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Alt')">Alt</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1 flex-grow-1" onclick="sendKey(' ')">Space</button>
+                        <button class="btn btn-outline-secondary btn-sm me-1" onclick="sendKey('Alt')">Alt</button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="sendKey('Control')">Ctrl</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let isConnected = false;
+let connectionStartTime = null;
+let connectionTimer = null;
+let screenRefreshInterval = null;
+
+function connectVNC() {
+    if (isConnected) return;
+    
+    showLoading('جاري الاتصال بخادم VNC...');
+    
+    // محاولة الاتصال
+    makeRequest('/api/vnc/status')
+        .done(function(status) {
+            if (status.is_running) {
+                establishConnection();
+            } else {
+                hideLoading();
+                updateConnectionStatus('خطأ: خادم VNC غير متصل. يرجى بدء الخادم أولاً.', 'danger');
+            }
+        })
+        .fail(function() {
+            hideLoading();
+            updateConnectionStatus('خطأ في الاتصال بالخادم', 'danger');
+        });
+}
+
+function establishConnection() {
+    // محاكاة اتصال VNC ناجح
+    setTimeout(function() {
+        hideLoading();
+        isConnected = true;
+        connectionStartTime = new Date();
+        
+        // تحديث واجهة المستخدم
+        $('#connect-btn').prop('disabled', true);
+        $('#disconnect-btn, #screenshot-btn').prop('disabled', false);
+        $('#status-badge').removeClass('bg-info').addClass('bg-success').text('متصل');
+        
+        updateConnectionStatus('تم الاتصال بخادم VNC بنجاح', 'success');
+        startConnectionTimer();
+        startScreenRefresh();
+        
+        // عرض سطح المكتب المحاكي
+        loadDesktopView();
+        
+    }, 2000);
+}
+
+function disconnectVNC() {
+    if (!isConnected) return;
+    
+    isConnected = false;
+    clearInterval(connectionTimer);
+    clearInterval(screenRefreshInterval);
+    
+    // تحديث واجهة المستخدم
+    $('#connect-btn').prop('disabled', false);
+    $('#disconnect-btn, #screenshot-btn').prop('disabled', true);
+    $('#status-badge').removeClass('bg-success').addClass('bg-info').text('غير متصل');
+    $('#connection-time').text('00:00:00');
+    
+    updateConnectionStatus('تم قطع الاتصال', 'warning');
+    
+    // إخفاء سطح المكتب
+    showWelcomeScreen();
+}
+
+function takeScreenshot() {
+    if (!isConnected) return;
+    
+    showNotification('جاري أخذ لقطة شاشة...', 'info');
+    
+    makeRequest('/api/vnc/screenshot')
+        .done(function(data) {
+            if (data.success) {
+                // عرض لقطة الشاشة
+                $('#vnc-screen').html(`<img src="${data.screenshot}" class="img-fluid" style="max-width: 100%; height: auto;">`);
+                showNotification('تم أخذ لقطة الشاشة بنجاح', 'success');
+            } else {
+                showNotification('فشل في أخذ لقطة الشاشة: ' + data.error, 'danger');
+            }
+        })
+        .fail(function() {
+            showNotification('خطأ في أخذ لقطة الشاشة', 'danger');
+        });
+}
+
+function loadDesktopView() {
+    takeScreenshot(); // أخذ لقطة شاشة أولية
+}
+
+function showWelcomeScreen() {
+    $('#vnc-screen').html(`
+        <div class="text-center text-white">
+            <i class="fas fa-desktop fa-5x mb-3 opacity-50"></i>
+            <h4>VNC Desktop</h4>
+            <p class="mb-0">اضغط "اتصال" لبدء جلسة VNC</p>
+        </div>
+    `);
+}
+
+function showLoading(text) {
+    $('#loading-text').text(text);
+    $('#loading-overlay').show();
+}
+
+function hideLoading() {
+    $('#loading-overlay').hide();
+}
+
+function updateConnectionStatus(message, type) {
+    const statusDiv = $('#connection-status');
+    statusDiv.removeClass('alert-info alert-success alert-warning alert-danger')
+             .addClass('alert-' + type)
+             .html(`<i class="fas fa-${getStatusIcon(type)} me-2"></i>${message}`);
+}
+
+function getStatusIcon(type) {
+    const icons = {
+        'info': 'info-circle',
+        'success': 'check-circle',
+        'warning': 'exclamation-triangle',
+        'danger': 'times-circle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function startConnectionTimer() {
+    connectionTimer = setInterval(function() {
+        if (connectionStartTime && isConnected) {
+            const now = new Date();
+            const diff = now - connectionStartTime;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            $('#connection-time').text(
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0')
+            );
+        }
+    }, 1000);
+}
+
+function startScreenRefresh() {
+    // تحديث الشاشة كل 30 ثانية
+    screenRefreshInterval = setInterval(function() {
+        if (isConnected) {
+            takeScreenshot();
+        }
+    }, 30000);
+}
+
+function refreshScreen() {
+    if (isConnected) {
+        takeScreenshot();
+    }
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById('vnc-container');
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        container.requestFullscreen();
+    }
+}
+
+function toggleKeyboard() {
+    $('#virtual-keyboard').toggle();
+}
+
+function sendKey(key) {
+    if (!isConnected) return;
+    
+    makeRequest('/api/vnc/input', 'POST', {
+        type: 'keyboard',
+        key: key
+    }).done(function(data) {
+        if (data.success) {
+            console.log('تم إرسال المفتاح:', key);
+        }
+    });
+}
+
+// Mouse events
+$(document).on('mousemove', '#vnc-screen', function(e) {
+    if (isConnected) {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        $('#mouse-pos').text(`${Math.round(x)}, ${Math.round(y)}`);
+    }
+});
+
+$(document).on('click', '#vnc-screen', function(e) {
+    if (!isConnected) return;
+    
+    const rect = this.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    makeRequest('/api/vnc/input', 'POST', {
+        type: 'mouse',
+        action: 'click',
+        button: 'left',
+        x: Math.round(x),
+        y: Math.round(y)
+    });
+});
+
+// Keyboard events
+$(document).on('keydown', function(e) {
+    if (isConnected && $('#vnc-screen:focus').length > 0) {
+        e.preventDefault();
+        sendKey(e.key);
+    }
+});
+
+// Initialize
+$(document).ready(function() {
+    showWelcomeScreen();
+    $('#vnc-screen').attr('tabindex', '0'); // Make it focusable for keyboard events
+});
+</script>
+
+<style>
+.virtual-keyboard-layout .kb-row {
+    display: flex;
+    justify-content: center;
+}
+
+.virtual-keyboard-layout .btn {
+    min-width: 35px;
+    font-size: 0.8rem;
+}
+
+#vnc-screen {
+    cursor: crosshair;
+    outline: none;
+}
+
+#vnc-screen:focus {
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.spinner-border {
+    color: white;
+}
+</style>
+{% endblock %}
