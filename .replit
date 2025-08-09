@@ -21,6 +21,10 @@ args = "Ubuntu Desktop VNC"
 task = "workflow.run"
 args = "ubuntu-desktop-vnc"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Ubuntu Desktop Demo"
+
 [[workflows.workflow]]
 name = "Ubuntu Desktop VNC"
 author = "agent"
@@ -40,3 +44,19 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./setup.sh && ./start.sh"
+
+[[workflows.workflow]]
+name = "Ubuntu Desktop Demo"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./start-simple.sh"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
