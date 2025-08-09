@@ -179,14 +179,27 @@ def main():
     # عرض معلومات الاتصال
     display_connection_info()
     
-    # البقاء نشطاً
+    # البقاء نشطاً مع مراقبة المنفذ
     try:
         print("VNC Server is running. Press Ctrl+C to stop.")
         while True:
+            # فحص حالة العملية
             if vnc_process and vnc_process.poll() is not None:
-                print("VNC process has stopped")
-                break
-            time.sleep(5)
+                print("VNC process has stopped, restarting...")
+                vnc_process = start_vnc_server()
+                if vnc_process is None:
+                    print("Failed to restart VNC Server")
+                    break
+            
+            # فحص المنفذ كل 30 ثانية
+            if not is_port_open(5900):
+                print("Port 5900 not responding, restarting VNC...")
+                vnc_process = start_vnc_server()
+                if vnc_process is None:
+                    print("Failed to restart VNC Server")
+                    break
+                    
+            time.sleep(30)  # فحص كل 30 ثانية
             
     except KeyboardInterrupt:
         print("\nShutting down VNC Server...")
