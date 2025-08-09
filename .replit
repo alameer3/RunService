@@ -1,10 +1,10 @@
-modules = ["bash", "python-3.11"]
+modules = ["bash", "python-3.11", "web"]
 [agent]
 expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["docker", "firefox", "openbox", "openssl", "postgresql", "x11vnc", "xorg.xvfb", "lxterminal", "xterm"]
+packages = ["docker", "firefox", "lxterminal", "openbox", "openssl", "postgresql", "x11vnc", "xorg.xvfb", "xterm", "tigervnc"]
 
 [workflows]
 runButton = "Project"
