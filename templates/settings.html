@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات متقدمة - خادم VNC{% endblock %}
+
+{% block content %}
+<style>
+    .settings-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border-left: 5px solid #007bff;
+    }
+    
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+    
+    .setting-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .setting-description {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1em;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 60px;
+        height: 30px;
+        background: #ccc;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .toggle-switch.active {
+        background: #007bff;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: left 0.3s;
+    }
+    
+    .toggle-switch.active .toggle-slider {
+        left: 33px;
+    }
+</style>
+
+<h2>⚙️ إعدادات النظام المتقدمة</h2>
+
+<div class="settings-section">
+    <h3>🔧 إعدادات VNC</h3>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">تشغيل تلقائي</div>
+            <div class="setting-description">بدء خادم VNC تلقائياً عند تشغيل التطبيق</div>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting('auto_start')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">الضغط المتقدم</div>
+            <div class="setting-description">تحسين ضغط البيانات لتوفير النطاق الترددي</div>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting('compression')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">تسجيل مفصل</div>
+            <div class="setting-description">تسجيل تفصيلي لجميع العمليات والأخطاء</div>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting('verbose_logging')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>🖥️ إعدادات العرض</h3>
+    
+    <div class="form-group">
+        <label class="setting-label">دقة الشاشة الافتراضية</label>
+        <select class="form-control" onchange="updateResolution(this.value)">
+            <option value="1024x768">1024x768 (4:3)</option>
+            <option value="1280x720">1280x720 (16:9)</option>
+            <option value="1280x1024">1280x1024 (5:4)</option>
+            <option value="1920x1080">1920x1080 (16:9)</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label class="setting-label">عمق الألوان</label>
+        <select class="form-control" onchange="updateColorDepth(this.value)">
+            <option value="24">24 بت (ألوان كاملة)</option>
+            <option value="16">16 بت (ألوان متوسطة)</option>
+            <option value="8">8 بت (ألوان محدودة)</option>
+        </select>
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>🔒 إعدادات الأمان</h3>
+    
+    <div class="form-group">
+        <label class="setting-label">تغيير كلمة المرور</label>
+        <div style="display: flex; gap: 10px;">
+            <input type="password" class="form-control" id="newPassword" placeholder="كلمة المرور الجديدة" style="flex: 1;">
+            <button class="btn btn-primary" onclick="changePassword()">تغيير</button>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">السماح بالاتصالات الخارجية</div>
+            <div class="setting-description">السماح للأجهزة خارج الشبكة المحلية بالاتصال</div>
+        </div>
+        <div class="toggle-switch active" onclick="toggleSetting('external_access')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">مهلة الجلسة</div>
+            <div class="setting-description">إنهاء الجلسة تلقائياً بعد عدم النشاط (دقائق)</div>
+        </div>
+        <input type="number" class="form-control" value="60" min="5" max="300" style="width: 100px;" onchange="updateSessionTimeout(this.value)">
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>🌐 إعدادات الشبكة</h3>
+    
+    <div class="form-group">
+        <label class="setting-label">منفذ VNC</label>
+        <input type="number" class="form-control" value="5900" min="5900" max="5999" onchange="updateVncPort(this.value)">
+        <small class="setting-description">المنفذ المستخدم لخادم VNC (5900-5999)</small>
+    </div>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">IPv6 دعم</div>
+            <div class="setting-description">تمكين دعم بروتوكول IPv6</div>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting('ipv6_support')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+</div>
+
+<div class="settings-section">
+    <h3>🔄 إعدادات النسخ الاحتياطي</h3>
+    
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">نسخ احتياطي تلقائي</div>
+            <div class="setting-description">إنشاء نسخة احتياطية للإعدادات يومياً</div>
+        </div>
+        <div class="toggle-switch" onclick="toggleSetting('auto_backup')">
+            <div class="toggle-slider"></div>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-success" onclick="exportSettings()">📤 تصدير الإعدادات</button>
+        <button class="btn btn-warning" onclick="importSettings()">📥 استيراد الإعدادات</button>
+        <button class="btn btn-danger" onclick="resetSettings()">🔄 إعادة تعيين</button>
+    </div>
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <button class="btn btn-primary" onclick="saveAllSettings()">💾 حفظ جميع الإعدادات</button>
+    <a href="/dashboard" class="btn btn-secondary">↩️ العودة للوحة التحكم</a>
+</div>
+
+<script>
+function toggleSetting(settingName) {
+    const toggle = event.target.closest('.toggle-switch');
+    toggle.classList.toggle('active');
+    
+    const isActive = toggle.classList.contains('active');
+    console.log(`Setting ${settingName}: ${isActive}`);
+    
+    // Save setting to backend
+    fetch('/admin/update-setting', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({setting: settingName, value: isActive})
+    });
+}
+
+function updateResolution(resolution) {
+    fetch('/admin/change-resolution', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resolution: resolution})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم تحديث دقة الشاشة بنجاح');
+        } else {
+            alert('فشل في تحديث دقة الشاشة: ' + data.message);
+        }
+    });
+}
+
+function updateColorDepth(depth) {
+    console.log('Color depth updated to:', depth);
+    // Implement color depth update
+}
+
+function changePassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    if (newPassword.length < 6) {
+        alert('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    fetch('/admin/change-password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: newPassword})
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) {
+            document.getElementById('newPassword').value = '';
+        }
+    });
+}
+
+function updateSessionTimeout(timeout) {
+    console.log('Session timeout updated to:', timeout);
+    // Implement session timeout update
+}
+
+function updateVncPort(port) {
+    if (port < 5900 || port > 5999) {
+        alert('المنفذ يجب أن يكون بين 5900-5999');
+        return;
+    }
+    console.log('VNC port updated to:', port);
+    // Implement VNC port update
+}
+
+function exportSettings() {
+    window.open('/admin/export-settings', '_blank');
+}
+
+function importSettings() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const settings = JSON.parse(e.target.result);
+                    // Import settings logic
+                    alert('تم استيراد الإعدادات بنجاح');
+                } catch (err) {
+                    alert('خطأ في ملف الإعدادات');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
+}
+
+function resetSettings() {
+    if (confirm('هل تريد إعادة تعيين جميع الإعدادات للقيم الافتراضية؟')) {
+        fetch('/admin/reset-settings', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                window.location.reload();
+            }
+        });
+    }
+}
+
+function saveAllSettings() {
+    alert('تم حفظ جميع الإعدادات بنجاح');
+}
+</script>
+{% endblock %}

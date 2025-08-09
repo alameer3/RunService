@@ -7,7 +7,7 @@
         border-radius: 10px;
         padding: 25px;
         margin-bottom: 25px;
-        border-left: 5px solid {{ '#28a745' if server_status else '#dc3545' }};
+        border-left: 5px solid {% if server_status %}#28a745{% else %}#dc3545{% endif %};
     }
     
     .status-indicator {

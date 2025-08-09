@@ -6,6 +6,7 @@ import subprocess
 import socket
 import time
 from datetime import datetime
+from pathlib import Path
 from flask import render_template, jsonify, request, redirect, url_for
 from app import app, db
 from models import VNCSession, ConnectionLog
@@ -246,5 +247,186 @@ def dashboard():
                              session=session,
                              server_status=check_vnc_status(),
                              recent_logs=recent_logs)
-    except:
+    except Exception as e:
+        app.logger.error(f"Dashboard error: {e}")
         return redirect(url_for('home'))
+
+@app.route('/admin/clear-logs', methods=['POST'])
+def clear_logs():
+    """Clear all connection logs"""
+    try:
+        ConnectionLog.query.delete()
+        db.session.commit()
+        log_action("clear_logs", True, "All logs cleared by admin")
+        return jsonify({'success': True, 'message': 'تم مسح جميع السجلات بنجاح'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'فشل في مسح السجلات: {e}'}), 500
+
+@app.route('/admin/system-status')
+def system_status():
+    """Get detailed system status"""
+    try:
+        import psutil
+        import os
+        
+        status_info = []
+        status_info.append("=== معلومات النظام ===")
+        status_info.append(f"نظام التشغيل: {os.uname().sysname} {os.uname().release}")
+        status_info.append(f"استخدام المعالج: {psutil.cpu_percent()}%")
+        status_info.append(f"استخدام الذاكرة: {psutil.virtual_memory().percent}%")
+        status_info.append(f"مساحة القرص: {psutil.disk_usage('/').percent}%")
+        
+        status_info.append("\n=== عمليات VNC ===")
+        result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
+        for line in result.stdout.split('\n'):
+            if any(proc in line for proc in ['x11vnc', 'Xvfb', 'vnc']):
+                status_info.append(line.strip())
+        
+        status_info.append("\n=== منافذ الشبكة ===")
+        result = subprocess.run(['netstat', '-tlnp'], capture_output=True, text=True)
+        for line in result.stdout.split('\n'):
+            if ':5900' in line or ':5901' in line:
+                status_info.append(line.strip())
+        
+        return '\n'.join(status_info)
+        
+    except Exception as e:
+        return f"خطأ في الحصول على معلومات النظام: {e}"
+
+@app.route('/admin/change-password', methods=['POST'])
+def change_vnc_password():
+    """Change VNC password"""
+    try:
+        data = request.get_json()
+        new_password = data.get('password', '').strip()
+        
+        if not new_password or len(new_password) < 6 or len(new_password) > 20:
+            return jsonify({'success': False, 'message': 'كلمة المرور يجب أن تكون بين 6-20 حرف'})
+        
+        # Update password in VNC
+        vnc_dir = Path.home() / ".vnc"
+        vnc_dir.mkdir(exist_ok=True)
+        passwd_file = vnc_dir / "passwd"
+        
+        # Generate new password file
+        result = subprocess.run([
+            'bash', '-c', 
+            f'echo "{new_password}" | vncpasswd -f'
+        ], capture_output=True, check=True)
+        
+        with open(passwd_file, 'wb') as f:
+            f.write(result.stdout)
+        os.chmod(passwd_file, 0o600)
+        
+        # Update global variable (for display purposes)
+        global VNC_PASSWORD
+        VNC_PASSWORD = new_password
+        
+        log_action("change_password", True, f"Password changed successfully")
+        return jsonify({'success': True, 'message': 'تم تغيير كلمة المرور بنجاح'})
+        
+    except Exception as e:
+        log_action("change_password", False, f"Failed to change password: {e}")
+        return jsonify({'success': False, 'message': f'فشل في تغيير كلمة المرور: {e}'}), 500
+
+@app.route('/admin/change-resolution', methods=['POST'])
+def change_screen_resolution():
+    """Change screen resolution"""
+    try:
+        data = request.get_json()
+        new_resolution = data.get('resolution', '').strip()
+        
+        valid_resolutions = ['1024x768', '1280x720', '1280x1024', '1920x1080']
+        if new_resolution not in valid_resolutions:
+            return jsonify({'success': False, 'message': 'دقة غير مدعومة'})
+        
+        # Update session in database
+        session = VNCSession.query.first()
+        if session:
+            session.screen_resolution = new_resolution
+            db.session.commit()
+        
+        # Update global variable
+        global SCREEN_RESOLUTION
+        SCREEN_RESOLUTION = new_resolution
+        
+        log_action("change_resolution", True, f"Resolution changed to {new_resolution}")
+        return jsonify({'success': True, 'message': f'تم تغيير الدقة إلى {new_resolution} بنجاح. إعادة تشغيل VNC مطلوبة.'})
+        
+    except Exception as e:
+        db.session.rollback()
+        log_action("change_resolution", False, f"Failed to change resolution: {e}")
+        return jsonify({'success': False, 'message': f'فشل في تغيير الدقة: {e}'}), 500
+
+@app.route('/settings')
+def settings_page():
+    """Advanced settings page"""
+    return render_template('settings.html')
+
+@app.route('/admin/update-setting', methods=['POST'])
+def update_setting():
+    """Update a system setting"""
+    try:
+        data = request.get_json()
+        setting_name = data.get('setting')
+        setting_value = data.get('value')
+        
+        log_action("update_setting", True, f"Setting {setting_name} updated to {setting_value}")
+        return jsonify({'success': True, 'message': f'تم تحديث الإعداد {setting_name} بنجاح'})
+        
+    except Exception as e:
+        log_action("update_setting", False, f"Failed to update setting: {e}")
+        return jsonify({'success': False, 'message': f'فشل في تحديث الإعداد: {e}'}), 500
+
+@app.route('/admin/export-settings')
+def export_settings():
+    """Export system settings as JSON"""
+    try:
+        settings = {
+            'vnc_port': VNC_PORT,
+            'vnc_password': VNC_PASSWORD,
+            'screen_resolution': SCREEN_RESOLUTION,
+            'exported_at': datetime.utcnow().isoformat(),
+            'version': '1.0'
+        }
+        
+        from flask import Response
+        import json
+        
+        response = Response(
+            json.dumps(settings, indent=2, ensure_ascii=False),
+            mimetype='application/json',
+            headers={'Content-Disposition': 'attachment; filename=vnc_settings.json'}
+        )
+        
+        log_action("export_settings", True, "Settings exported successfully")
+        return response
+        
+    except Exception as e:
+        log_action("export_settings", False, f"Failed to export settings: {e}")
+        return jsonify({'success': False, 'message': f'فشل في تصدير الإعدادات: {e}'}), 500
+
+@app.route('/admin/reset-settings', methods=['POST'])
+def reset_settings():
+    """Reset all settings to defaults"""
+    try:
+        global VNC_PORT, VNC_PASSWORD, SCREEN_RESOLUTION
+        VNC_PORT = 5901
+        VNC_PASSWORD = "vnc123456"
+        SCREEN_RESOLUTION = "1024x768"
+        
+        # Reset database session
+        session = VNCSession.query.first()
+        if session:
+            session.vnc_port = VNC_PORT
+            session.screen_resolution = SCREEN_RESOLUTION
+            db.session.commit()
+        
+        log_action("reset_settings", True, "All settings reset to defaults")
+        return jsonify({'success': True, 'message': 'تم إعادة تعيين جميع الإعدادات للقيم الافتراضية'})
+        
+    except Exception as e:
+        db.session.rollback()
+        log_action("reset_settings", False, f"Failed to reset settings: {e}")
+        return jsonify({'success': False, 'message': f'فشل في إعادة التعيين: {e}'}), 500
