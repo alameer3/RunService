@@ -83,7 +83,7 @@ def start_vnc_server():
     cmd = [
         "x11vnc",
         "-display", ":1",
-        "-rfbport", "5901",
+        "-rfbport", "5900",
         "-rfbauth", str(vnc_passwd_file),
         "-listen", "0.0.0.0",  # الاستماع على جميع الواجهات
         "-forever",
@@ -100,8 +100,8 @@ def start_vnc_server():
         time.sleep(5)
         
         # فحص المنفذ
-        if is_port_open(5901):
-            print("VNC Server is running on port 5901")
+        if is_port_open(5900):
+            print("VNC Server is running on port 5900")
             return process
         else:
             print("VNC Server failed to bind to port")
@@ -139,7 +139,7 @@ def display_connection_info():
     print("\n" + "="*50)
     print("VNC Server - Active and Ready")
     print("="*50)
-    print("Port: 5901")
+    print("Port: 5900")
     print("Password: vnc123456")
     print("Resolution: 1024x768")
     print("="*50)

@@ -11,7 +11,7 @@ def check_vnc_status():
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(2)
-            result = s.connect_ex(('127.0.0.1', 5901))
+            result = s.connect_ex(('127.0.0.1', 5900))
             return result == 0
     except:
         return False
@@ -36,7 +36,7 @@ def get_connection_info():
     
     return {
         'host': repl_url,
-        'port': 5901,
+        'port': 5900,
         'password': 'vnc123456',
         'resolution': '1024x768'
     }
