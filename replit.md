@@ -1,56 +1,72 @@
-# Project Overview
+# مشروع متصفح VNC للسيرفر
 
-## Overview
+## نظرة عامة
 
-This is a VNC-based remote desktop environment project that provides a complete Ubuntu 22.04 desktop experience accessible through a web browser. The system creates a containerized virtual desktop environment with LXDE desktop manager, accessible via noVNC web interface, and secured with Cloudflare tunneling capabilities.
+مشروع لإعداد بيئة سطح مكتب خفيفة مع متصفح ويب يمكن الوصول إليها عبر VNC على سيرفر Ubuntu/Debian. النظام مصمم ليعمل على سيرفرات بذاكرة 1 جيجا رام مع تشغيل تلقائي بعد إعادة التشغيل.
 
-## User Preferences
+## تفضيلات المستخدم
 
-Preferred communication style: Simple, everyday language.
+- أسلوب التواصل المفضل: لغة عربية واضحة ومنظمة
+- التركيز على الحلول الخفيفة والموثوقة
+- يفضل التثبيت التلقائي والإعداد المبسط
 
-## System Architecture
+## معمارية النظام
 
-### Containerization Strategy
-- **Base System**: Ubuntu 22.04 LTS for stability and long-term support
-- **Desktop Environment**: LXDE chosen for lightweight resource usage while maintaining full desktop functionality
-- **Display Management**: Xvfb (X Virtual Framebuffer) for headless display server operations
+### بيئة سطح المكتب
+- **LXDE**: بيئة سطح مكتب خفيفة ومناسبة للسيرفرات بذاكرة محدودة
+- **Xvfb**: خادم عرض افتراضي للتشغيل بدون شاشة فعلية
+- **VNC Server**: TigerVNC أو x11vnc للوصول عن بُعد
 
-### Remote Access Architecture
-- **VNC Server**: x11vnc provides the core screen sharing functionality with password protection
-- **Web Interface**: noVNC (v1.2.0) enables browser-based access without requiring VNC client software
-- **WebSocket Bridge**: websockify handles the protocol translation between HTTP/WebSocket and VNC
+### المتصفحات
+- **Firefox ESR**: متصفح رئيسي مستقر وخفيف
+- **Chromium**: متصفح بديل للمواقع التي تتطلب Chromium
 
-### Security and Networking
-- **Authentication**: Basic password protection (default: 123456) for VNC access
-- **Tunnel Solution**: Cloudflare's cloudflared for secure external access and bypassing firewall restrictions
-- **Network Tools**: Built-in utilities (net-tools, netcat) for connectivity troubleshooting
+### إدارة الخدمات
+- **systemd**: لتشغيل الخدمات تلقائياً بعد إعادة التشغيل
+- **VNC Password**: حماية الوصول بكلمة مرور
 
-### Browser Integration
-- **Web Browser**: Chromium browser manually installed (avoiding snap packages for container compatibility)
-- **Package Management**: Direct .deb installation to ensure proper integration with the containerized environment
+## الميزات المطلوبة
 
-### System Configuration
-- **Timezone**: Configured for Asia/Riyadh timezone with proper locale settings
-- **Non-interactive Setup**: All installations configured to avoid user prompts during container builds
-- **Process Management**: Designed for headless operation with automated service startup
+1. تثبيت تلقائي لجميع المكونات
+2. إعداد VNC مع كلمة مرور
+3. تشغيل تلقائي بعد إعادة التشغيل
+4. بيئة خفيفة تعمل على 1 جيجا رام
+5. واجهة سهلة الاستخدام
 
-## External Dependencies
+## التقنيات المستخدمة
 
-### Core Infrastructure
-- **Docker**: Container runtime environment for system deployment
-- **Ubuntu Package Repositories**: System packages and security updates source
+- **نظام التشغيل**: Ubuntu/Debian
+- **بيئة سطح المكتب**: LXDE
+- **VNC Server**: x11vnc
+- **المتصفحات**: Firefox ESR, Chromium
+- **أدوات النظام**: systemctl, cron, bash scripts
 
-### Remote Access Services
-- **noVNC Project**: Open-source HTML5 VNC client (GitHub: novnc/noVNC)
-- **Websockify**: WebSocket-to-TCP proxy service (GitHub: novnc/websockify)
-- **Cloudflare**: cloudflared binary for tunnel creation and external access
+## الحالة الحالية للمشروع
 
-### Desktop Components
-- **LXDE Desktop**: Lightweight desktop environment from Ubuntu repositories
-- **X11 System**: X Window System components for graphical interface
-- **Chromium Browser**: Web browser from Ubuntu security repositories
+تم إكمال ترحيل المشروع بنجاح إلى بيئة Replit في أغسطس 2025:
 
-### Development Tools
-- **Python 3**: Runtime environment with pip package manager
-- **Git**: Version control system for repository management
-- **System Utilities**: Network diagnostic and file management tools
+### ✅ المكونات المُكملة
+- خادم VNC Desktop (Python) - يعمل على المنفذ 5901
+- واجهة ويب تفاعلية (Flask) - تعمل على المنفذ 5000  
+- نظام إدارة متكامل مع سكريبتات bash
+- تثبيت تلقائي للمكونات المطلوبة (Xvfb, x11vnc, openbox, firefox)
+- واجهة مستخدم عربية جميلة وسهلة الاستخدام
+
+### 🚀 الخدمات النشطة
+- VNC Desktop Server: يعمل بشكل مثالي مع مراقب العمليات
+- VNC Web Interface: واجهة ويب تفاعلية للإدارة
+- دعم كامل لإدارة كلمة المرور والتشغيل التلقائي
+
+### 📋 معلومات الوصول
+- عنوان VNC: localhost:5901
+- كلمة المرور: vnc123456
+- واجهة الويب: http://localhost:5000
+- دقة الشاشة: 1024x768
+
+### 🔧 الملفات الرئيسية
+- `main.py`: خادم VNC الرئيسي
+- `web_interface.py`: واجهة الويب للإدارة
+- `install.sh`: تثبيت تلقائي كامل للسيرفرات
+- `quick-setup.sh`: إعداد سريع للبيئات المحدودة
+- `manage-vnc.sh`: أدوات إدارة متقدمة
+- `start-desktop.sh`: تشغيل يدوي للنظام

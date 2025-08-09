@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["docker"]
+packages = ["docker", "firefox", "openbox", "x11vnc", "xorg.xvfb"]
 
 [workflows]
 runButton = "Project"
@@ -16,70 +16,34 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Ubuntu Desktop VNC"
+args = "VNC Desktop Server"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "ubuntu-desktop-vnc"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Ultimate VNC System"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Complete OneClick System"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Ubuntu Desktop Server"
+args = "VNC Web Interface"
 
 [[workflows.workflow]]
-name = "Ubuntu Desktop VNC"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./setup.sh && ./start.sh"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "vnc"
-
-[[workflows.workflow]]
-name = "ubuntu-desktop-vnc"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./setup.sh && ./start.sh"
-
-[[workflows.workflow]]
-name = "Ultimate VNC System"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./ultimate_start.sh"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Complete OneClick System"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./complete_system.sh"
-waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Ubuntu Desktop Server"
+name = "VNC Desktop Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python3 main.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "VNC Web Interface"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 web_interface.py"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000
