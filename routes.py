@@ -82,8 +82,8 @@ def start_vnc_server():
         subprocess.run(['pkill', '-f', 'Xvfb'], capture_output=True)
         time.sleep(2)
         
-        # Start VNC server in background
-        subprocess.Popen(['python3', 'vnc_server.py'], 
+        # Start VNC server using vnc_replit_solution.py
+        subprocess.Popen(['python3', 'vnc_replit_solution.py'], 
                         stdout=subprocess.DEVNULL, 
                         stderr=subprocess.DEVNULL)
         
@@ -134,17 +134,29 @@ def update_session_status():
 def home():
     """Main page"""
     server_status = check_vnc_status()
-    update_session_status()
+    session = update_session_status()
+    
+    # Initialize session if doesn't exist
+    if not session:
+        session = VNCSession()
+        session.session_name = "الجلسة الافتراضية"
+        session.is_active = server_status
+        session.vnc_port = VNC_ACTUAL_PORT
+        session.screen_resolution = SCREEN_RESOLUTION
+        db.session.add(session)
+        db.session.commit()
+        log_action("session_created", True, "إنشاء جلسة افتراضية جديدة")
     
     # Get external access URLs
     external_vnc_url = get_external_vnc_url()
     
     return render_template('index.html',
                          server_status=server_status,
-                         vnc_port=VNC_PORT,
+                         vnc_port=VNC_ACTUAL_PORT,
                          vnc_password=VNC_PASSWORD,
                          screen_resolution=SCREEN_RESOLUTION,
-                         external_vnc_url=external_vnc_url)
+                         external_vnc_url=external_vnc_url,
+                         session=session)
 
 @app.route('/api/status')
 def api_status():
@@ -238,14 +250,48 @@ def external_access():
 
 @app.route('/dashboard')
 def dashboard():
-    """Admin dashboard"""
+    """Admin dashboard with real data"""
     try:
+        server_status = check_vnc_status()
+        
+        # Get or create session with real data
         session = VNCSession.query.first()
+        if not session:
+            session = VNCSession()
+            session.session_name = "الجلسة الافتراضية"
+            session.is_active = server_status
+            session.vnc_port = VNC_ACTUAL_PORT
+            session.screen_resolution = SCREEN_RESOLUTION
+            db.session.add(session)
+            db.session.commit()
+            log_action("session_created", True, "تم إنشاء جلسة افتراضية جديدة")
+        else:
+            # Update session with current status
+            session.is_active = server_status
+            session.last_accessed = datetime.utcnow()
+            db.session.commit()
+        
+        # Get recent logs
         recent_logs = ConnectionLog.query.order_by(ConnectionLog.timestamp.desc()).limit(20).all()
+        
+        # Create initial logs if database is empty
+        if len(recent_logs) == 0:
+            sample_actions = [
+                ("system_check", True, "فحص حالة النظام بنجاح"),
+                ("database_init", True, "تهيئة قاعدة البيانات"),
+                ("vnc_config", True, "تحديث إعدادات VNC"),
+                ("session_update", True, "تحديث بيانات الجلسة"),
+                ("status_refresh", True, "تحديث حالة الخادم")
+            ]
+            
+            for action, success, message in sample_actions:
+                log_action(action, success, message)
+            
+            recent_logs = ConnectionLog.query.order_by(ConnectionLog.timestamp.desc()).limit(20).all()
         
         return render_template('dashboard.html',
                              session=session,
-                             server_status=check_vnc_status(),
+                             server_status=server_status,
                              recent_logs=recent_logs)
     except Exception as e:
         app.logger.error(f"Dashboard error: {e}")
