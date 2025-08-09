@@ -26,6 +26,10 @@ args = "ubuntu-desktop-vnc"
 task = "workflow.run"
 args = "Ultimate VNC System"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OneClickDesktop Replit"
+
 [[workflows.workflow]]
 name = "Ubuntu Desktop VNC"
 author = "agent"
@@ -53,6 +57,15 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./ultimate_start.sh"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "OneClickDesktop Replit"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./run_oneclick.sh"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
