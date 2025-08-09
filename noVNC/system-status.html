@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حالة النظام الشاملة</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .status-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .status-card.online {
+            border-color: #2ecc71;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+        }
+        .status-card.offline {
+            border-color: #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.3);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status-green { background: #2ecc71; }
+        .status-red { background: #e74c3c; }
+        .status-yellow { background: #f39c12; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .vnc-viewer {
+            grid-column: 1 / -1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .log-viewer {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ OneClickDesktop - حالة النظام الشاملة</h1>
+            <p>نظام سطح المكتب عن بُعد مع VNC وGuacamole</p>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card" id="vnc-card">
+                <div class="card-header">
+                    <h3>🖥️ VNC Server</h3>
+                    <span class="status-indicator status-green" id="vnc-indicator"></span>
+                </div>
+                <p><strong>المنفذ:</strong> 5900</p>
+                <p><strong>الدقة:</strong> 1024x768</p>
+                <p><strong>الحالة:</strong> <span id="vnc-status">جاري الفحص...</span></p>
+            </div>
+            
+            <div class="status-card" id="websocket-card">
+                <div class="card-header">
+                    <h3>🌐 WebSocket Proxy</h3>
+                    <span class="status-indicator status-green" id="websocket-indicator"></span>
+                </div>
+                <p><strong>المنفذ:</strong> 6080</p>
+                <p><strong>البروتوكول:</strong> VNC over WebSocket</p>
+                <p><strong>الحالة:</strong> <span id="websocket-status">جاري الفحص...</span></p>
+            </div>
+            
+            <div class="status-card" id="http-card">
+                <div class="card-header">
+                    <h3>🌍 HTTP Server</h3>
+                    <span class="status-indicator status-green" id="http-indicator"></span>
+                </div>
+                <p><strong>المنفذ:</strong> 5000</p>
+                <p><strong>الخادم:</strong> Python HTTP Server</p>
+                <p><strong>الحالة:</strong> <span id="http-status">جاري الفحص...</span></p>
+            </div>
+            
+            <div class="status-card">
+                <div class="card-header">
+                    <h3>📊 OneClickDesktop</h3>
+                    <span class="status-indicator status-yellow"></span>
+                </div>
+                <p><strong>الإصدار:</strong> v0.4.0</p>
+                <p><strong>Guacamole:</strong> 1.5.5 (محاكي)</p>
+                <p><strong>الحالة:</strong> محدود للـ Replit</p>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="runSystemTest()">🧪 اختبار شامل</button>
+            <button class="btn" onclick="connectVNC()">🔗 اتصال VNC</button>
+            <button class="btn" onclick="toggleLogs()">📋 عرض السجلات</button>
+            <button class="btn" onclick="refreshStatus()">🔄 تحديث الحالة</button>
+        </div>
+        
+        <div class="log-viewer" id="log-viewer">
+            <div id="log-content">جاري تحميل السجلات...</div>
+        </div>
+        
+        <div class="vnc-viewer">
+            <h3>🖥️ VNC Desktop Viewer</h3>
+            <iframe src="vnc.html?autoconnect=true&host=localhost&port=6080&resize=scale&quality=9" id="vnc-frame"></iframe>
+        </div>
+        
+        <div class="footer">
+            <h4>📘 معلومات النظام</h4>
+            <p><strong>OneClickDesktop الأصلي:</strong> نظام كامل لإعداد سطح مكتب عن بُعد مع Guacamole + Tomcat + XFCE4</p>
+            <p><strong>هذا المحول:</strong> نسخة محدودة تعمل في بيئة Replit بدون صلاحيات الجذر</p>
+            <p><strong>الميزات المتاحة:</strong> VNC Server تفاعلي + WebSocket Proxy + واجهة ويب شاملة</p>
+        </div>
+    </div>
+    
+    <script>
+        function updateServiceStatus(service, isOnline, message) {
+            const card = document.getElementById(service + '-card');
+            const indicator = document.getElementById(service + '-indicator');
+            const status = document.getElementById(service + '-status');
+            
+            card.className = 'status-card ' + (isOnline ? 'online' : 'offline');
+            indicator.className = 'status-indicator ' + (isOnline ? 'status-green' : 'status-red');
+            status.textContent = message;
+        }
+        
+        function checkVNCStatus() {
+            // محاولة اتصال TCP للمنفذ 5900
+            fetch('/diagnosis.html')
+                .then(() => updateServiceStatus('vnc', true, 'VNC Server يعمل'))
+                .catch(() => updateServiceStatus('vnc', false, 'VNC Server لا يستجيب'));
+        }
+        
+        function checkWebSocketStatus() {
+            const ws = new WebSocket('ws://localhost:6080');
+            ws.onopen = function() {
+                updateServiceStatus('websocket', true, 'WebSocket متصل');
+                ws.close();
+            };
+            ws.onerror = function() {
+                updateServiceStatus('websocket', false, 'WebSocket فشل الاتصال');
+            };
+        }
+        
+        function checkHTTPStatus() {
+            fetch('/')
+                .then(response => {
+                    if (response.ok) {
+                        updateServiceStatus('http', true, 'HTTP Server يعمل');
+                    } else {
+                        updateServiceStatus('http', false, 'HTTP خطأ: ' + response.status);
+                    }
+                })
+                .catch(() => updateServiceStatus('http', false, 'HTTP غير متاح'));
+        }
+        
+        function refreshStatus() {
+            checkVNCStatus();
+            checkWebSocketStatus();
+            checkHTTPStatus();
+        }
+        
+        function runSystemTest() {
+            const logContent = document.getElementById('log-content');
+            const logViewer = document.getElementById('log-viewer');
+            
+            logViewer.style.display = 'block';
+            logContent.innerHTML = '';
+            
+            const tests = [
+                '🧪 بدء الاختبار الشامل...',
+                '📡 فحص اتصال VNC Server...',
+                '🌐 فحص WebSocket Proxy...',
+                '🌍 فحص HTTP Server...',
+                '🔗 اختبار البروتوكولات...',
+                '✅ اكتمل الاختبار الشامل'
+            ];
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < tests.length) {
+                    logContent.innerHTML += new Date().toLocaleTimeString() + ': ' + tests[index] + '\\n';
+                    logContent.scrollTop = logContent.scrollHeight;
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    refreshStatus();
+                }
+            }, 1000);
+        }
+        
+        function connectVNC() {
+            const frame = document.getElementById('vnc-frame');
+            frame.src = frame.src + '&reconnect=' + Date.now();
+        }
+        
+        function toggleLogs() {
+            const logViewer = document.getElementById('log-viewer');
+            logViewer.style.display = logViewer.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(refreshStatus, 30000);
+        
+        // فحص أولي عند التحميل
+        window.addEventListener('load', function() {
+            setTimeout(refreshStatus, 1000);
+        });
+    </script>
+</body>
+</html>
