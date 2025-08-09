@@ -30,6 +30,17 @@ class VNCManager:
         # تهيئة كلمة المرور (بدون قاعدة بيانات في البداية)
         self._setup_vnc_password()
     
+    def _safe_log(self, level, category, message):
+        """تسجيل آمن يتجنب مشاكل السياق"""
+        try:
+            if current_app:
+                with current_app.app_context():
+                    from models import SystemLog, db
+                    SystemLog.log(level, category, message)
+        except:
+            # في حالة فشل تسجيل قاعدة البيانات، سجل في ملف
+            logger.info(f"{level} [{category}]: {message}")
+    
     def _setup_vnc_password(self):
         """إعداد كلمة مرور VNC"""
         try:
@@ -93,7 +104,7 @@ class VNCManager:
                 session = self._create_session_record(display, port, resolution)
                 
                 logger.info(f"✅ تم بدء خادم VNC المحاكي على المنفذ {port}")
-                SystemLog.log('INFO', 'VNC', f'تم بدء خادم VNC بنجاح - المنفذ: {port}')
+                self._safe_log('INFO', 'VNC', f'تم بدء خادم VNC بنجاح - المنفذ: {port}')
                 
                 return {
                     'success': True,
@@ -107,7 +118,7 @@ class VNCManager:
                 }
             else:
                 logger.error("فشل في بدء خادم VNC")
-                SystemLog.log('ERROR', 'VNC', 'فشل في بدء خادم VNC')
+                self._safe_log('ERROR', 'VNC', 'فشل في بدء خادم VNC')
                 return {
                     'success': False,
                     'message': 'فشل في بدء خادم VNC'
@@ -115,7 +126,7 @@ class VNCManager:
                 
         except Exception as e:
             logger.error(f"خطأ في بدء VNC: {e}")
-            SystemLog.log('ERROR', 'VNC', f'خطأ في بدء VNC: {e}')
+            self._safe_log('ERROR', 'VNC', f'خطأ في بدء VNC: {e}')
             return {
                 'success': False,
                 'message': f'خطأ في بدء خادم VNC: {str(e)}'
@@ -223,15 +234,16 @@ class VNCManager:
             
             # تحديث حالة الجلسات
             try:
-                from flask import current_app
-                with current_app.app_context():
-                    VNCSession.query.update({'is_active': False})
-                    db.session.commit()
+                if current_app:
+                    with current_app.app_context():
+                        from models import VNCSession, db
+                        VNCSession.query.update({'is_active': False})
+                        db.session.commit()
             except:
                 pass  # في حالة عدم وجود app context
             
             logger.info(f"✅ تم إيقاف خادم VNC: {stopped_count} عملية")
-            SystemLog.log('INFO', 'VNC', f'تم إيقاف خادم VNC: {stopped_count} عملية')
+            self._safe_log('INFO', 'VNC', f'تم إيقاف خادم VNC: {stopped_count} عملية')
             
             return {
                 'success': True,
@@ -241,7 +253,7 @@ class VNCManager:
             
         except Exception as e:
             logger.error(f"خطأ في إيقاف VNC: {e}")
-            SystemLog.log('ERROR', 'VNC', f'خطأ في إيقاف VNC: {e}')
+            self._safe_log('ERROR', 'VNC', f'خطأ في إيقاف VNC: {e}')
             return {
                 'success': False,
                 'message': f'خطأ في إيقاف خادم VNC: {str(e)}'
@@ -305,23 +317,29 @@ class VNCManager:
     def _create_session_record(self, display, port, resolution):
         """إنشاء سجل جلسة في قاعدة البيانات"""
         try:
-            from flask import current_app
-            
-            with current_app.app_context():
-                session = VNCSession(
-                    session_name=f"جلسة VNC {display}",
-                    display_number=display,
-                    port=port,
-                    screen_resolution=resolution,
-                    color_depth=self.color_depth,
-                    is_active=True,
-                    desktop_environment='LXDE'
-                )
-                
-                db.session.add(session)
-                db.session.commit()
-                
-                return session
+            if current_app:
+                with current_app.app_context():
+                    from models import VNCSession, db
+                    session = VNCSession(
+                        session_name=f"جلسة VNC {display}",
+                        display_number=display,
+                        port=port,
+                        screen_resolution=resolution,
+                        color_depth=self.color_depth,
+                        is_active=True,
+                        desktop_environment='LXDE'
+                    )
+                    
+                    db.session.add(session)
+                    db.session.commit()
+                    
+                    return session
+            else:
+                # إنشاء كائن وهمي في حالة عدم وجود Flask context
+                class MockSession:
+                    def __init__(self):
+                        self.id = f"mock_{display}_{port}"
+                return MockSession()
             
         except Exception as e:
             logger.error(f"خطأ في إنشاء سجل الجلسة: {e}")

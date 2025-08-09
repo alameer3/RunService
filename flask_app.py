@@ -64,13 +64,16 @@ def register_routes(app):
     def home():
         """الصفحة الرئيسية"""
         from vnc_manager import get_vnc_status, get_system_info
+        from real_vnc_server import get_real_vnc_status
         
         vnc_status = get_vnc_status()
         system_info = get_system_info()
+        real_vnc_status = get_real_vnc_status()
         
         return render_template('index.html', 
                              vnc_status=vnc_status,
-                             system_info=system_info)
+                             system_info=system_info,
+                             real_vnc_status=real_vnc_status)
     
     @app.route('/dashboard')
     def dashboard():
@@ -163,6 +166,46 @@ def register_api_routes(app):
         """معلومات النظام"""
         from vnc_manager import get_system_info
         return jsonify(get_system_info())
+    
+    @app.route('/api/real-vnc/start', methods=['POST'])
+    def api_start_real_vnc():
+        """بدء خادم VNC الحقيقي للأندرويد"""
+        try:
+            from real_vnc_server import start_real_vnc
+            result = start_real_vnc()
+            
+            if result['success']:
+                socketio.emit('real_vnc_status_changed', {'status': 'running'})
+                return jsonify(result)
+            else:
+                return jsonify(result), 500
+                
+        except Exception as e:
+            logger.error(f"خطأ في بدء Real VNC: {e}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+    
+    @app.route('/api/real-vnc/stop', methods=['POST'])
+    def api_stop_real_vnc():
+        """إيقاف خادم VNC الحقيقي"""
+        try:
+            from real_vnc_server import stop_real_vnc
+            result = stop_real_vnc()
+            
+            if result['success']:
+                socketio.emit('real_vnc_status_changed', {'status': 'stopped'})
+                return jsonify(result)
+            else:
+                return jsonify(result), 500
+                
+        except Exception as e:
+            logger.error(f"خطأ في إيقاف Real VNC: {e}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+    
+    @app.route('/api/real-vnc/status')
+    def api_real_vnc_status():
+        """حالة خادم VNC الحقيقي"""
+        from real_vnc_server import get_real_vnc_status
+        return jsonify(get_real_vnc_status())
     
     @app.route('/api/apps/install', methods=['POST'])
     def api_install_app():
