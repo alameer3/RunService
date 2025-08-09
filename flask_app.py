@@ -113,9 +113,12 @@ def register_routes(app):
     @app.route('/logs')
     def logs():
         """عرض السجلات"""
-        from models import SystemLog
-        
-        logs = SystemLog.query.order_by(SystemLog.timestamp.desc()).limit(100).all()
+        try:
+            from models import SystemLog
+            logs = SystemLog.query.order_by(SystemLog.timestamp.desc()).limit(100).all()
+        except Exception as e:
+            logger.error(f"خطأ في قراءة السجلات: {e}")
+            logs = []
         return render_template('logs.html', logs=logs)
 
 def register_api_routes(app):

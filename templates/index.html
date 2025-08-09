@@ -74,6 +74,101 @@
             </div>
         </div>
 
+        <!-- RealVNC Android Connection Card -->
+        <div class="card mb-4" id="android-vnc-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fab fa-android me-2"></i>
+                    الاتصال من تطبيق RealVNC Viewer (أندرويد)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    <strong>لاستخدام RealVNC Viewer على الأندرويد:</strong>
+                    <br>1. حمل تطبيق "RealVNC Viewer" من Google Play Store
+                    <br>2. انقر على "+" وأدخل العنوان أدناه
+                    <br>3. استخدم كلمة المرور المعروضة
+                </div>
+                
+                <div class="row" id="real-vnc-info">
+                    <div class="col-md-7">
+                        <div class="connection-info p-3 bg-light border rounded">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-link me-2"></i>
+                                رابط الاتصال للأندرويد
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <strong>العنوان الكامل للأندرويد:</strong>
+                                <div class="input-group mt-1">
+                                    <input type="text" class="form-control bg-white" id="android-full-address" value="workspace.viwat26495.replit.dev:5901" readonly>
+                                    <button class="btn btn-success" onclick="copyToClipboard('android-full-address')" title="نسخ العنوان">
+                                        <i class="fas fa-copy"></i> نسخ
+                                    </button>
+                                </div>
+                                <small class="text-muted">انسخ هذا العنوان بالكامل إلى تطبيق RealVNC Viewer</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <strong>كلمة المرور:</strong>
+                                    <div class="input-group mt-1">
+                                        <input type="text" class="form-control bg-white" id="android-password" value="vnc123" readonly>
+                                        <button class="btn btn-outline-success" onclick="copyToClipboard('android-password')" title="نسخ كلمة المرور">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>المنفذ:</strong>
+                                    <div class="mt-1">
+                                        <span class="badge bg-success fs-6">5901</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <div class="real-vnc-controls">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="status-indicator me-3" id="real-vnc-status-indicator">
+                                    <i class="fas fa-circle text-secondary fa-2x"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">خادم VNC للأندرويد</h6>
+                                    <span class="text-muted" id="real-vnc-status-text">متوقف</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-success" id="start-real-vnc-btn" onclick="startRealVNC()">
+                                    <i class="fas fa-play me-2"></i>
+                                    بدء خادم VNC للأندرويد
+                                </button>
+                                <button type="button" class="btn btn-danger" id="stop-real-vnc-btn" onclick="stopRealVNC()" disabled>
+                                    <i class="fas fa-stop me-2"></i>
+                                    إيقاف الخادم
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="checkRealVNCStatus()">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    فحص الحالة
+                                </button>
+                            </div>
+                            
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-shield-alt me-1 text-success"></i>
+                                    محمي بكلمة مرور • تشفير آمن
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- System Information Card -->
         <div class="card status-card">
             <div class="card-header bg-transparent">
@@ -299,13 +394,114 @@ function updateSystemInfo(info) {
     }
 }
 
+// RealVNC Functions
+function startRealVNC() {
+    const startBtn = $('#start-real-vnc-btn');
+    const stopBtn = $('#stop-real-vnc-btn');
+    
+    startBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>جاري البدء...');
+    
+    $.post('/api/real-vnc/start')
+        .done(function(response) {
+            if (response.success) {
+                updateRealVNCStatus(true, response.connection_info);
+                showAlert('success', 'تم بدء خادم VNC للأندرويد بنجاح!');
+            } else {
+                showAlert('danger', response.message || 'فشل في بدء خادم VNC');
+                startBtn.prop('disabled', false).html('<i class="fas fa-play me-2"></i>بدء خادم VNC للأندرويد');
+            }
+        })
+        .fail(function() {
+            showAlert('danger', 'حدث خطأ في الاتصال');
+            startBtn.prop('disabled', false).html('<i class="fas fa-play me-2"></i>بدء خادم VNC للأندرويد');
+        });
+}
+
+function stopRealVNC() {
+    const startBtn = $('#start-real-vnc-btn');
+    const stopBtn = $('#stop-real-vnc-btn');
+    
+    stopBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>جاري الإيقاف...');
+    
+    $.post('/api/real-vnc/stop')
+        .done(function(response) {
+            if (response.success) {
+                updateRealVNCStatus(false);
+                showAlert('info', 'تم إيقاف خادم VNC');
+            } else {
+                showAlert('danger', response.message || 'فشل في إيقاف خادم VNC');
+            }
+            stopBtn.prop('disabled', false).html('<i class="fas fa-stop me-2"></i>إيقاف الخادم');
+        })
+        .fail(function() {
+            showAlert('danger', 'حدث خطأ في الاتصال');
+            stopBtn.prop('disabled', false).html('<i class="fas fa-stop me-2"></i>إيقاف الخادم');
+        });
+}
+
+function checkRealVNCStatus() {
+    $.get('/api/real-vnc/status')
+        .done(function(response) {
+            updateRealVNCStatus(response.is_running, response.connection_info);
+        })
+        .fail(function() {
+            console.log('فشل في فحص حالة Real VNC');
+        });
+}
+
+function updateRealVNCStatus(isRunning, connectionInfo) {
+    const statusIndicator = $('#real-vnc-status-indicator i');
+    const statusText = $('#real-vnc-status-text');
+    const startBtn = $('#start-real-vnc-btn');
+    const stopBtn = $('#stop-real-vnc-btn');
+    
+    if (isRunning) {
+        statusIndicator.removeClass('text-secondary text-danger').addClass('text-success pulse');
+        statusText.text('يعمل - جاهز للاتصال');
+        startBtn.prop('disabled', true).html('<i class="fas fa-check me-2"></i>يعمل');
+        stopBtn.prop('disabled', false);
+        
+        // تحديث معلومات الاتصال
+        if (connectionInfo && connectionInfo.android_connection) {
+            $('#android-full-address').val(connectionInfo.android_connection);
+        }
+    } else {
+        statusIndicator.removeClass('text-success pulse').addClass('text-secondary');
+        statusText.text('متوقف');
+        startBtn.prop('disabled', false).html('<i class="fas fa-play me-2"></i>بدء خادم VNC للأندرويد');
+        stopBtn.prop('disabled', true);
+    }
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showAlert('success', 'تم نسخ النص بنجاح!', 2000);
+    } catch (err) {
+        // Fallback for modern browsers
+        navigator.clipboard.writeText(element.value).then(function() {
+            showAlert('success', 'تم نسخ النص بنجاح!', 2000);
+        }).catch(function() {
+            showAlert('warning', 'لم يتمكن من نسخ النص. انسخه يدوياً.', 3000);
+        });
+    }
+}
+
 // Socket event handlers
 socket.on('vnc_status_update', updateVNCStatus);
 socket.on('system_info_update', updateSystemInfo);
+socket.on('real_vnc_status_changed', function(data) {
+    checkRealVNCStatus();
+});
 
 // Initialize on page load
 $(document).ready(function() {
     refreshStatus();
+    checkRealVNCStatus();
 });
 </script>
 {% endblock %}
