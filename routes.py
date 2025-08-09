@@ -11,43 +11,45 @@ from app import app, db
 from models import VNCSession, ConnectionLog
 
 # VNC server configuration
-VNC_PORT = 5901
+VNC_PORT = 5901  # Legacy port for compatibility
+VNC_ACTUAL_PORT = 5900  # Actual port used by vnc_networking.py
 VNC_PASSWORD = "vnc123456" 
 SCREEN_RESOLUTION = "1024x768"
 
-# Get Replit URL for external access
-def get_repl_url():
-    """Get the external Replit URL for VNC access"""
+# Get Replit URL for external VNC access
+def get_external_vnc_url():
+    """Get the external Replit URL for VNC access with port 5900"""
     import os
     
-    # Try to get the actual Replit URL from environment
+    # Get the development domain from Replit
+    dev_domain = os.getenv('REPLIT_DEV_DOMAIN')
+    if dev_domain:
+        return f"{dev_domain}:5900"
+    
+    # Fallback: try to get from REPLIT_URL
     repl_url = os.getenv('REPLIT_URL')
     if repl_url:
-        return repl_url.replace('http://', 'https://').rstrip('/')
+        # Extract domain from URL and add VNC port
+        domain = repl_url.replace('http://', '').replace('https://', '').rstrip('/')
+        return f"{domain}:5900"
     
-    # Fallback: construct URL from Replit environment variables
-    repl_slug = os.getenv('REPL_SLUG')
-    repl_owner = os.getenv('REPL_OWNER') or os.getenv('USER', 'user')
-    
-    if repl_slug and repl_owner:
-        return f"https://{repl_slug}--{repl_owner}.replit.app"
-    
-    # Last fallback: use current domain from request if available
+    # Try request host as fallback
     try:
         from flask import request
-        if request:
-            return f"https://{request.host}".replace(':80', '').replace(':443', '')
+        if request and hasattr(request, 'host'):
+            host = request.host.replace(':5000', '').replace(':80', '').replace(':443', '')
+            return f"{host}:5900"
     except:
         pass
     
-    # Final fallback for development
-    return "https://your-repl.replit.app"
+    # Final fallback
+    return "your-repl.replit.dev:5900"
 
 def check_vnc_status():
-    """Check VNC server status"""
+    """Check VNC server status on actual port 5900"""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            result = sock.connect_ex(('127.0.0.1', VNC_PORT))
+            result = sock.connect_ex(('127.0.0.1', VNC_ACTUAL_PORT))
             return result == 0
     except:
         return False
@@ -134,15 +136,13 @@ def home():
     update_session_status()
     
     # Get external access URLs
-    repl_url = get_repl_url()
-    external_vnc_url = f"{repl_url}:{VNC_PORT}"
+    external_vnc_url = get_external_vnc_url()
     
     return render_template('index.html',
                          server_status=server_status,
                          vnc_port=VNC_PORT,
                          vnc_password=VNC_PASSWORD,
                          screen_resolution=SCREEN_RESOLUTION,
-                         repl_url=repl_url,
                          external_vnc_url=external_vnc_url)
 
 @app.route('/api/status')
@@ -226,15 +226,13 @@ def download_page():
 def external_access():
     """External access information page"""
     server_status = check_vnc_status()
-    repl_url = get_repl_url()
-    external_vnc_url = f"{repl_url}:{VNC_PORT}"
+    external_vnc_url = get_external_vnc_url()
     
     return render_template('external-access.html',
                          server_status=server_status,
-                         vnc_port=VNC_PORT,
+                         vnc_port=5900,  # Updated to correct port
                          vnc_password=VNC_PASSWORD,
                          screen_resolution=SCREEN_RESOLUTION,
-                         repl_url=repl_url,
                          external_vnc_url=external_vnc_url)
 
 @app.route('/dashboard')
