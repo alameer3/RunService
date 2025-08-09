@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}تنزيل عملاء VNC{% endblock %}
+
+{% block content %}
+<style>
+    .client {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .client h3 {
+        margin: 0 0 10px 0;
+        color: #007bff;
+    }
+    
+    .client p {
+        margin: 5px 0;
+        color: #6c757d;
+    }
+    
+    .download-link {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background 0.3s;
+    }
+    
+    .download-link:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 30px;
+    }
+    
+    .back-link a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<h1>تنزيل عملاء VNC</h1>
+
+<div class="client">
+    <h3>VNC Viewer (موصى به)</h3>
+    <p>العميل الأكثر شعبية واستقراراً من RealVNC</p>
+    <p>يدعم جميع أنظمة التشغيل: Windows, macOS, Linux</p>
+    <a href="https://www.realvnc.com/download/viewer/" target="_blank" class="download-link">تنزيل VNC Viewer</a>
+</div>
+
+<div class="client">
+    <h3>TigerVNC</h3>
+    <p>عميل مفتوح المصدر وسريع الأداء</p>
+    <p>خفيف ومناسب للخوادم عالية الأداء</p>
+    <a href="https://github.com/TigerVNC/tigervnc/releases" target="_blank" class="download-link">تنزيل TigerVNC</a>
+</div>
+
+<div class="client">
+    <h3>TightVNC</h3>
+    <p>عميل خفيف مع ضغط محسن للشبكات البطيئة</p>
+    <p>مناسب للاتصالات عبر الإنترنت</p>
+    <a href="https://www.tightvnc.com/download.php" target="_blank" class="download-link">تنزيل TightVNC</a>
+</div>
+
+<div class="client">
+    <h3>UltraVNC (Windows فقط)</h3>
+    <p>عميل متقدم مع ميزات إضافية للويندوز</p>
+    <p>يدعم نقل الملفات والدردشة النصية</p>
+    <a href="https://www.uvnc.com/downloads/ultravnc.html" target="_blank" class="download-link">تنزيل UltraVNC</a>
+</div>
+
+<div class="client">
+    <h3>Remmina (Linux)</h3>
+    <p>عميل مدمج مع معظم توزيعات Linux</p>
+    <p>يدعم بروتوكولات متعددة بما في ذلك VNC</p>
+    <p><strong>تثبيت على Ubuntu/Debian:</strong> <code>sudo apt install remmina</code></p>
+</div>
+
+<div class="back-link">
+    <a href="/">&larr; العودة للصفحة الرئيسية</a>
+</div>
+{% endblock %}
