@@ -2,11 +2,9 @@
 نماذج قاعدة البيانات لنظام VNC
 """
 
-from flask_sqlalchemy import SQLAlchemy
+from app import db
 from datetime import datetime
 import json
-
-db = SQLAlchemy()
 
 class VNCSession(db.Model):
     """جلسات VNC"""
