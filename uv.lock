@@ -531,6 +531,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "boto3" },
+    { name = "botocore" },
     { name = "celery" },
     { name = "email-validator" },
     { name = "eventlet" },
@@ -548,6 +549,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.40.6" },
+    { name = "botocore", specifier = ">=1.40.6" },
     { name = "celery", specifier = ">=5.5.3" },
     { name = "email-validator", specifier = ">=2.2.0" },
     { name = "eventlet", specifier = ">=0.40.2" },
