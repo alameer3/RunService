@@ -1,4 +1,5 @@
 from app import app  # noqa: F401
+import routes  # Import routes to register them with the Flask app
 import subprocess
 import threading
 import time
