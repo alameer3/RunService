@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["docker"]
 
 [workflows]
 runButton = "Project"
@@ -23,7 +24,7 @@ args = "ubuntu-desktop-vnc"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Ubuntu Desktop Demo"
+args = "Ubuntu Desktop Complete"
 
 [[workflows.workflow]]
 name = "Ubuntu Desktop VNC"
@@ -46,12 +47,12 @@ task = "shell.exec"
 args = "./setup.sh && ./start.sh"
 
 [[workflows.workflow]]
-name = "Ubuntu Desktop Demo"
+name = "Ubuntu Desktop Complete"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./start-simple.sh"
+args = "./start-fixed.sh"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
@@ -60,3 +61,7 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 6080
+externalPort = 3000
