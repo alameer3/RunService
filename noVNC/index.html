@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Desktop VNC - الرئيسية</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 { 
+            font-size: 3rem; 
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .status {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .feature {
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ Ubuntu Desktop VNC</h1>
+            <p>بيئة سطح مكتب Ubuntu كاملة عبر المتصفح</p>
+        </div>
+
+        <div class="status">
+            <h3>
+                <span class="status-indicator"></span>
+                حالة الخادم: متصل وجاهز
+            </h3>
+            <p>خادم VNC يعمل بنجاح ومتاح للاتصال</p>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h3>🚀 الوصول السريع</h3>
+                <p>ادخل إلى سطح المكتب مباشرة مع الإعدادات المحسنة للأداء</p>
+                <a href="/vnc.html" class="btn">فتح سطح المكتب</a>
+            </div>
+
+            <div class="card">
+                <h3>📱 العرض المحمول</h3>
+                <p>واجهة محسنة للهواتف والأجهزة اللوحية مع تحكم باللمس</p>
+                <a href="/vnc_lite.html" class="btn">العرض المحمول</a>
+            </div>
+
+            <div class="card">
+                <h3>🌐 متصفح Browsh</h3>
+                <p>متصفح نصي حديث بدعم JavaScript كامل - مثالي للاتصالات البطيئة</p>
+                <a href="/browsh.html" class="btn">تشغيل Browsh</a>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ الإعدادات</h3>
+                <p>تخصيص إعدادات الاتصال وجودة العرض</p>
+                <a href="/settings.html" class="btn">الإعدادات</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h4>آمن ومشفر</h4>
+                <p>اتصال VNC محمي بكلمة مرور</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h4>أداء عالي</h4>
+                <p>محسن للسرعة والاستجابة</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔧</div>
+                <h4>سهل الاستخدام</h4>
+                <p>لا يتطلب تثبيت برامج إضافية</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌍</div>
+                <h4>متاح عالمياً</h4>
+                <p>اتصل من أي مكان في العالم</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // إضافة بعض التفاعلية
+        document.addEventListener('DOMContentLoaded', function() {
+            // فحص حالة الاتصال كل 30 ثانية
+            setInterval(checkConnection, 30000);
+            
+            function checkConnection() {
+                // محاولة الاتصال بـ websocket للتحقق من حالة الخادم
+                const ws = new WebSocket('ws://localhost:6080');
+                ws.onopen = function() {
+                    document.querySelector('.status h3').innerHTML = 
+                        '<span class="status-indicator"></span>حالة الخادم: متصل وجاهز';
+                    ws.close();
+                };
+                ws.onerror = function() {
+                    document.querySelector('.status h3').innerHTML = 
+                        '<span style="background:#f44336" class="status-indicator"></span>حالة الخادم: فحص الاتصال...';
+                };
+            }
+        });
+    </script>
+</body>
+</html>

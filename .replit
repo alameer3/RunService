@@ -30,6 +30,10 @@ args = "Ultimate VNC System"
 task = "workflow.run"
 args = "Complete OneClick System"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Ubuntu Desktop Server"
+
 [[workflows.workflow]]
 name = "Ubuntu Desktop VNC"
 author = "agent"
@@ -59,6 +63,9 @@ task = "shell.exec"
 args = "./ultimate_start.sh"
 waitForPort = 5000
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow]]
 name = "Complete OneClick System"
 author = "agent"
@@ -67,6 +74,18 @@ author = "agent"
 task = "shell.exec"
 args = "./complete_system.sh"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Ubuntu Desktop Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 main.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000
