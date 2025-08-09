@@ -79,7 +79,7 @@ def start_vnc_server():
         print("VNC password file missing")
         return False
     
-    # استخدام x11vnc مع إعدادات محسنة للشبكة
+    # استخدام x11vnc مع إعدادات محسنة ومستقرة
     cmd = [
         "x11vnc",
         "-display", ":1",
@@ -88,24 +88,44 @@ def start_vnc_server():
         "-listen", "0.0.0.0",  # الاستماع على جميع الواجهات
         "-forever",
         "-shared",
-        "-solid",
-        "-noxdamage"
+        "-solid", "black",
+        "-noxdamage",
+        "-noxfixes",
+        "-noxrecord",
+        "-noxrandr",
+        "-nomodtweak",
+        "-nowf",
+        "-noxcomposite",
+        "-notruecolor"
     ]
     
     try:
-        # تشغيل في المقدمة لضمان الرؤية
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # قتل أي عمليات x11vnc سابقة
+        subprocess.run(['pkill', '-f', 'x11vnc'], capture_output=True)
+        time.sleep(2)
         
-        # انتظار للتأكد من بدء التشغيل
-        time.sleep(5)
+        # تشغيل x11vnc مع تسجيل مفصل
+        process = subprocess.Popen(cmd, 
+                                 stdout=subprocess.PIPE, 
+                                 stderr=subprocess.STDOUT,
+                                 universal_newlines=True)
         
-        # فحص المنفذ
-        if is_port_open(5900):
-            print("VNC Server is running on port 5900")
-            return process
-        else:
-            print("VNC Server failed to bind to port")
-            return None
+        # انتظار أطول للتأكد من بدء التشغيل
+        time.sleep(8)
+        
+        # فحص المنفذ مع عدة محاولات
+        for attempt in range(5):
+            if is_port_open(5900):
+                print("VNC Server is running on port 5900")
+                return process
+            time.sleep(2)
+        
+        print("VNC Server failed to bind to port after multiple attempts")
+        if process.poll() is not None:
+            # العملية توقفت
+            stdout, _ = process.communicate()
+            print(f"VNC process output: {stdout}")
+        return None
             
     except Exception as e:
         print(f"VNC Server startup failed: {e}")
