@@ -15,6 +15,16 @@ VNC_PORT = 5901
 VNC_PASSWORD = "vnc123456" 
 SCREEN_RESOLUTION = "1024x768"
 
+# Get Replit URL for external access
+def get_repl_url():
+    """Get the external Replit URL for VNC access"""
+    import os
+    repl_slug = os.getenv('REPL_SLUG', 'vnc-desktop')
+    repl_owner = os.getenv('REPL_OWNER', 'user')
+    
+    # Replit format: https://repl-slug--repl-owner.replit.app:PORT
+    return f"https://{repl_slug}--{repl_owner}.replit.app"
+
 def check_vnc_status():
     """Check VNC server status"""
     try:
@@ -94,11 +104,17 @@ def home():
     server_status = check_vnc_status()
     update_session_status()
     
+    # Get external access URLs
+    repl_url = get_repl_url()
+    external_vnc_url = f"{repl_url}:{VNC_PORT}"
+    
     return render_template('index.html',
                          server_status=server_status,
                          vnc_port=VNC_PORT,
                          vnc_password=VNC_PASSWORD,
-                         screen_resolution=SCREEN_RESOLUTION)
+                         screen_resolution=SCREEN_RESOLUTION,
+                         repl_url=repl_url,
+                         external_vnc_url=external_vnc_url)
 
 @app.route('/api/status')
 def api_status():
@@ -176,6 +192,21 @@ def show_logs():
 def download_page():
     """Download page for VNC clients"""
     return render_template('download.html')
+
+@app.route('/external-access')
+def external_access():
+    """External access information page"""
+    server_status = check_vnc_status()
+    repl_url = get_repl_url()
+    external_vnc_url = f"{repl_url}:{VNC_PORT}"
+    
+    return render_template('external-access.html',
+                         server_status=server_status,
+                         vnc_port=VNC_PORT,
+                         vnc_password=VNC_PASSWORD,
+                         screen_resolution=SCREEN_RESOLUTION,
+                         repl_url=repl_url,
+                         external_vnc_url=external_vnc_url)
 
 @app.route('/dashboard')
 def dashboard():

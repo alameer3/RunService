@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}الوصول الخارجي - VNC Desktop{% endblock %}
+
+{% block content %}
+<style>
+    .access-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .access-info h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 2.2em;
+    }
+    
+    .connection-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+    
+    .detail-card {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 25px;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .detail-card h3 {
+        color: #ffeb3b;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .detail-card p {
+        font-size: 1.1em;
+        line-height: 1.6;
+        margin: 10px 0;
+    }
+    
+    .connection-url {
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 1.1em;
+        word-break: break-all;
+        margin: 15px 0;
+    }
+    
+    .steps-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 30px;
+        margin: 30px 0;
+    }
+    
+    .steps-section h2 {
+        color: #495057;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .step-number {
+        background: #007bff;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-left: 15px;
+        flex-shrink: 0;
+    }
+    
+    .step-content {
+        flex: 1;
+    }
+    
+    .step-content h4 {
+        color: #007bff;
+        margin-bottom: 8px;
+    }
+    
+    .step-content p {
+        color: #6c757d;
+        line-height: 1.5;
+    }
+    
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .warning-box h4 {
+        color: #856404;
+        margin-bottom: 10px;
+    }
+    
+    .warning-box p {
+        color: #856404;
+        margin: 5px 0;
+    }
+    
+    .status-check {
+        text-align: center;
+        margin: 30px 0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+
+<div class="access-info">
+    <h1>🌐 الوصول لـ VNC Desktop من جهازك</h1>
+    <p style="text-align: center; font-size: 1.2em; opacity: 0.9;">
+        يمكنك الآن الوصول لسطح المكتب من أي جهاز خارج Replit
+    </p>
+    
+    <div class="connection-details">
+        <div class="detail-card">
+            <h3>🔗 عنوان الاتصال الخارجي</h3>
+            {% if server_status %}
+            <div class="connection-url">{{ external_vnc_url }}</div>
+            <p>استخدم هذا العنوان من برنامج VNC على جهازك</p>
+            {% else %}
+            <p style="color: #ffcdd2;">الخادم متوقف حالياً - قم بتشغيله أولاً</p>
+            {% endif %}
+        </div>
+        
+        <div class="detail-card">
+            <h3>🔐 معلومات المصادقة</h3>
+            <p><strong>كلمة المرور:</strong> {{ vnc_password }}</p>
+            <p><strong>دقة الشاشة:</strong> {{ screen_resolution }}</p>
+            <p><strong>البروتوكول:</strong> VNC (RFB)</p>
+        </div>
+    </div>
+</div>
+
+<div class="status-check">
+    <div class="status-badge {{ 'status-active' if server_status else 'status-inactive' }}">
+        {{ 'الخادم نشط ✅' if server_status else 'الخادم متوقف ⏹️' }}
+    </div>
+</div>
+
+<div class="steps-section">
+    <h2>📋 خطوات الاتصال من جهازك الخارجي</h2>
+    
+    <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h4>تحميل برنامج VNC</h4>
+            <p>قم بتحميل وتثبيت برنامج VNC Viewer من <a href="https://www.realvnc.com/download/viewer/" target="_blank">RealVNC</a> أو أي عميل VNC آخر على جهازك</p>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h4>بدء تشغيل خادم VNC</h4>
+            <p>إذا لم يكن الخادم يعمل، اضغط زر "بدء الخادم" من <a href="/">الصفحة الرئيسية</a></p>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h4>إدخال عنوان الاتصال</h4>
+            <p>في برنامج VNC، أدخل العنوان:</p>
+            {% if server_status %}
+            <code style="background: #e9ecef; padding: 5px 10px; border-radius: 4px;">{{ external_vnc_url }}</code>
+            {% else %}
+            <code style="background: #f8d7da; padding: 5px 10px; border-radius: 4px;">قم بتشغيل الخادم أولاً</code>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+            <h4>إدخال كلمة المرور</h4>
+            <p>عند المطالبة، أدخل كلمة المرور: <strong>{{ vnc_password }}</strong></p>
+        </div>
+    </div>
+    
+    <div class="step">
+        <div class="step-number">5</div>
+        <div class="step-content">
+            <h4>الاتصال</h4>
+            <p>اضغط "Connect" وستظهر لك شاشة سطح المكتب مع Firefox والمحطة الطرفية</p>
+        </div>
+    </div>
+</div>
+
+<div class="warning-box">
+    <h4>⚠️ ملاحظات مهمة</h4>
+    <p>• تأكد من أن خادم VNC يعمل قبل المحاولة</p>
+    <p>• قد يستغرق بدء التشغيل 10-15 ثانية</p>
+    <p>• إذا لم تتمكن من الاتصال، جرب إعادة تشغيل الخادم</p>
+    <p>• سيتم إيقاف الخادم تلقائياً عند عدم الاستخدام</p>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="/" class="btn btn-primary">العودة للصفحة الرئيسية</a>
+    <a href="/download" class="btn btn-secondary">تحميل برامج VNC</a>
+</div>
+{% endblock %}

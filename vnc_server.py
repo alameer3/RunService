@@ -36,6 +36,9 @@ class VNCDesktopServer:
         self.screen_resolution = "1024x768"
         self.vnc_password = "vnc123456"
         
+        # إعدادات Replit الخارجية
+        self.repl_host = "0.0.0.0"  # الاستماع على جميع الواجهات
+        
         # متغيرات العمليات
         self.processes = []
         self.running = False
@@ -214,7 +217,7 @@ done
             subprocess.run(["pkill", "-f", "x11vnc"], capture_output=True)
             time.sleep(1)
             
-            # بناء أمر x11vnc
+            # بناء أمر x11vnc للوصول الخارجي
             vnc_cmd = [
                 "x11vnc",
                 "-display", self.display_num,
@@ -222,7 +225,9 @@ done
                 "-forever",
                 "-shared",
                 "-noxdamage",
-                "-noxrecord"
+                "-noxrecord",
+                "-listen", self.repl_host,  # الاستماع على جميع الواجهات
+                "-permitfiletransfer"  # السماح بنقل الملفات
             ]
             
             # إضافة كلمة المرور إذا كانت متوفرة
