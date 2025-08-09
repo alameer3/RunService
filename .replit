@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["chromium", "docker", "firefox", "lxterminal", "openbox", "openssl", "postgresql", "tigervnc", "x11vnc", "xorg.xvfb", "xterm"]
+packages = ["chromium", "docker", "firefox", "iana-etc", "lxterminal", "nginx", "openbox", "openssl", "postgresql", "redis", "tigervnc", "x11vnc", "xorg.xvfb", "xterm"]
 
 [workflows]
 runButton = "Project"

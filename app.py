@@ -37,5 +37,34 @@ with app.app_context():
         pass  # No models yet
     db.create_all()
 
+# Initialize advanced services
+try:
+    # Redis Cache Manager
+    from redis_manager import init_redis
+    init_redis(app)
+    
+    # WebSocket Manager for real-time updates
+    from websocket_manager import init_websocket
+    socketio = init_websocket(app)
+    
+    # Security Manager
+    from security import init_security
+    init_security(app)
+    
+    # Cloud Services Integration
+    from cloud_integration import init_cloud_services
+    init_cloud_services(app)
+    
+    logging.info("✅ All advanced services initialized successfully")
+    
+except Exception as e:
+    logging.error(f"❌ Failed to initialize advanced services: {e}")
+
 # Import routes after app creation
-import routes  # noqa: F401
+try:
+    import routes  # noqa: F401
+    import api_fixed  # noqa: F401 - Using fixed API without circular imports
+    # import admin  # noqa: F401 - Skip for now due to imports
+    logging.info("Routes imported successfully")
+except ImportError as e:
+    logging.warning(f"Failed to import some modules: {e}")

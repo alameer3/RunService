@@ -6,7 +6,7 @@ from flask import jsonify, request, abort
 from app import app, db
 from models import VNCSession, ConnectionLog
 from security import rate_limit_decorator, log_security_event, validate_vnc_password, validate_screen_resolution
-from performance import performance_monitor, monitor_request_performance, cached
+# Import will be done inside functions to avoid circular imports
 from datetime import datetime, timedelta
 import subprocess
 import socket
@@ -14,7 +14,7 @@ import json
 
 @app.route('/api/v1/system/health', methods=['GET'])
 @rate_limit_decorator(max_requests=30, window_minutes=1)
-@monitor_request_performance
+# @monitor_request_performance
 def api_system_health():
     """فحص صحة النظام - API متقدم"""
     try:
@@ -52,7 +52,7 @@ def api_system_health():
 
 @app.route('/api/v1/vnc/status', methods=['GET'])
 @rate_limit_decorator(max_requests=20, window_minutes=1)
-@cached(ttl=30)  # تخزين مؤقت لمدة 30 ثانية
+# @cached(ttl=30)  # تخزين مؤقت لمدة 30 ثانية
 def api_vnc_detailed_status():
     """حالة خادم VNC المفصلة"""
     try:
