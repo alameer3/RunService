@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class VNCManager:
     def __init__(self):
         self.display = ":1"
-        self.vnc_port = 5901
+        self.vnc_port = 5900
         self.vnc_password = "vnc123456"
         self.screen_resolution = "1024x768"
         self.color_depth = 24
@@ -74,6 +74,10 @@ class VNCManager:
     def start_x11vnc(self):
         """تشغيل خادم VNC"""
         try:
+            # إيقاف أي خدمة VNC موجودة على نفس المنفذ
+            subprocess.run(["pkill", "-f", "x11vnc"], capture_output=True)
+            time.sleep(1)
+            
             cmd = [
                 "x11vnc",
                 "-display", self.display,
@@ -81,12 +85,22 @@ class VNCManager:
                 "-passwd", self.vnc_password,
                 "-forever",
                 "-shared",
+                "-noxdamage",
+                "-noxfixes", 
+                "-noscr",
+                "-quiet",
                 "-bg"
             ]
             
             result = subprocess.run(cmd, capture_output=True, text=True)
             
-            if result.returncode == 0:
+            # انتظار قصير للتأكد من بدء التشغيل
+            time.sleep(2)
+            
+            # التحقق من تشغيل VNC بواسطة فحص العملية
+            check_result = subprocess.run(["pgrep", "-f", "x11vnc"], capture_output=True)
+            
+            if check_result.returncode == 0:
                 logger.info(f"✅ تم تشغيل x11vnc على المنفذ {self.vnc_port}")
                 return True
             else:
@@ -274,8 +288,8 @@ def main():
     
     try:
         if vnc.start_all():
-            logger.info("VNC Server يعمل على المنفذ 5901")
-            logger.info("يمكنك الاتصال باستخدام VNC viewer على localhost:5901")
+            logger.info("VNC Server يعمل على المنفذ 5900")
+            logger.info("يمكنك الاتصال باستخدام VNC viewer على localhost:5900")
             
             # إبقاء البرنامج يعمل
             while True:
