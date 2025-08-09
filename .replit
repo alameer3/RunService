@@ -1,4 +1,4 @@
-modules = ["python-3.11"]
+modules = ["nodejs-20", "bash", "web", "python-3.11"]
 [agent]
 expertMode = true
 
@@ -67,9 +67,6 @@ author = "agent"
 task = "shell.exec"
 args = "./complete_system.sh"
 waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 5000
