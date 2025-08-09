@@ -26,6 +26,8 @@
 - **Process Management**: Python-based VNC manager with automatic monitoring, auto-restart on errors
 - **Security**: Password protection, session management, comprehensive audit logging
 - **Migration Status**: Successfully migrated from Docker to native Replit environment (2025-08-09)
+- **Multi-Interface Support**: VNC running on ports 5900-5903 for different access types
+- **Web Interface**: Available on port 8080 for browser-based VNC selection
 
 ### Backend
 - **Language**: Python 3.11+

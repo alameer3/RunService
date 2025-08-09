@@ -4,8 +4,8 @@
 
 import logging
 import time
+import subprocess
 from flask import Blueprint, render_template, jsonify, request
-from vnc_manager import vnc_manager
 
 logger = logging.getLogger(__name__)
 
@@ -16,20 +16,29 @@ def vnc_viewer():
     """واجهة عارض VNC عبر الويب"""
     return render_template('vnc_viewer.html')
 
-@vnc_web.route('/vnc/connect')
-def vnc_connect():
-    """صفحة اتصال VNC"""
-    status = vnc_manager.get_vnc_status()
-    
-    if not status['is_running']:
-        return render_template('vnc_connect.html', error="خادم VNC غير متصل")
-    
-    # الحصول على معلومات الاتصال
-    session = status['active_sessions'][0] if status['active_sessions'] else None
-    
-    return render_template('vnc_connect.html', 
-                         session=session,
-                         status=status)
+@vnc_web.route('/vnc/status')
+def vnc_status():
+    """حالة خادم VNC"""
+    try:
+        # التحقق من تشغيل VNC
+        vnc_check = subprocess.run(["pgrep", "-f", "x11vnc"], capture_output=True)
+        xvfb_check = subprocess.run(["pgrep", "-f", "Xvfb"], capture_output=True)
+        
+        vnc_running = vnc_check.returncode == 0
+        xvfb_running = xvfb_check.returncode == 0
+        
+        status = {
+            'vnc_running': vnc_running,
+            'xvfb_running': xvfb_running,
+            'port': 5900,
+            'display': ':1',
+            'status': 'متصل' if vnc_running else 'غير متصل'
+        }
+        
+        return jsonify(status)
+    except Exception as e:
+        logger.error(f"خطأ في فحص حالة VNC: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @vnc_web.route('/api/vnc/screenshot')
 def vnc_screenshot():
@@ -45,16 +54,16 @@ def vnc_screenshot():
         draw = ImageDraw.Draw(img)
         
         # رسم سطح مكتب بسيط
-        draw.rectangle([10, 10, 1014, 50], fill='darkblue')
+        draw.rectangle((10, 10, 1014, 50), fill='darkblue')
         draw.text((20, 25), "VNC Desktop - نظام سطح المكتب الافتراضي", fill='white')
         
         # رسم نافذة
-        draw.rectangle([100, 100, 600, 400], outline='gray', width=2)
-        draw.rectangle([100, 100, 600, 130], fill='lightgray')
+        draw.rectangle((100, 100, 600, 400), outline='gray', width=2)
+        draw.rectangle((100, 100, 600, 130), fill='lightgray')
         draw.text((110, 110), "Terminal - المحطة الطرفية", fill='black')
         
         # رسم محتوى النافذة
-        draw.rectangle([110, 140, 590, 390], fill='black')
+        draw.rectangle((110, 140, 590, 390), fill='black')
         terminal_text = [
             "user@vnc-desktop:~$ ls -la",
             "total 12",

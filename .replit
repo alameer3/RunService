@@ -4,7 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
-packages = ["chromium", "docker", "firefox", "iana-etc", "lxterminal", "nginx", "openbox", "openssl", "postgresql", "redis", "tigervnc", "x11vnc", "xorg.xvfb", "xterm", "firefox-esr", "netcat-openbsd", "git"]
+packages = ["chromium", "docker", "firefox", "firefox-esr", "freetype", "git", "iana-etc", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "lxterminal", "netcat-openbsd", "nginx", "openbox", "openjpeg", "openssl", "postgresql", "redis", "tcl", "tigervnc", "tk", "x11vnc", "xorg.xvfb", "xterm", "zlib"]
 
 [workflows]
 runButton = "Project"
@@ -58,6 +58,14 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 8080
+
+[[ports]]
+localPort = 5902
+externalPort = 3001
+
+[[ports]]
+localPort = 5903
+externalPort = 3002
 
 [[ports]]
 localPort = 6080
