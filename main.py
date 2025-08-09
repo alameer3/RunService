@@ -25,5 +25,5 @@ def start_vnc_background():
 
 # Start VNC when app starts
 if os.getenv('ENABLE_VNC', 'true').lower() == 'true':
-    start_vnc_background()
+    pass  # Disabled automatic VNC start to prevent conflicts
 import routes  # noqa: F401

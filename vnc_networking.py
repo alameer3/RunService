@@ -191,15 +191,15 @@ def main():
                     print("Failed to restart VNC Server")
                     break
             
-            # فحص المنفذ كل 30 ثانية
+            # فحص المنفذ كل دقيقة (أقل تكراراً)
+            time.sleep(60)  # فحص كل دقيقة
             if not is_port_open(5900):
-                print("Port 5900 not responding, restarting VNC...")
+                print("Port 5900 not responding, will restart after delay...")
+                time.sleep(10)  # انتظار إضافي قبل إعادة التشغيل
                 vnc_process = start_vnc_server()
                 if vnc_process is None:
                     print("Failed to restart VNC Server")
-                    break
-                    
-            time.sleep(30)  # فحص كل 30 ثانية
+                    time.sleep(30)  # انتظار أطول قبل المحاولة التالية
             
     except KeyboardInterrupt:
         print("\nShutting down VNC Server...")
